@@ -31,7 +31,7 @@ export default function Hero() {
             <br />
             <span className="italic font-normal">with Homes</span>
             <br />
-            &amp; Community
+            &amp; <span className="italic font-normal">Community</span>
           </h1>
         </motion.div>
 
