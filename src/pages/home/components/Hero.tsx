@@ -26,12 +26,16 @@ export default function Hero() {
           <p className="text-white/70 text-xs md:text-sm font-medium tracking-[0.3em] uppercase mb-6">
             Los Angeles Luxury Real Estate
           </p>
-          <h1 className="font-heading-h1 text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white font-medium leading-[1.1] tracking-tight">
+          {/* Two lines, not three: "with Homes & Community" reads as one phrase
+              and the client asked for it to hold together on a single line.
+              The base size steps down to 3xl so it still fits without wrapping
+              on a narrow phone — every breakpoint above is unchanged. */}
+          <h1 className="font-heading-h1 text-3xl sm:text-5xl md:text-6xl lg:text-7xl text-white font-medium leading-[1.1] tracking-tight">
             Connecting People
             <br />
-            <span className="italic font-normal">with Homes</span>
-            <br />
-            &amp; <span className="italic font-normal">Community</span>
+            <span className="italic font-normal">
+              with Homes <span className="amp">&amp;</span> Community
+            </span>
           </h1>
         </motion.div>
 

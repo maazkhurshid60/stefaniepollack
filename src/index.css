@@ -97,6 +97,34 @@
   }
 }
 
+@layer components {
+  /* ------------------------------------------------------------------
+     The decorative ampersand.
+
+     Setting "&" in a more calligraphic face than the surrounding words is a
+     long-standing typographic convention, and it is how the swash glyph the
+     client asked for is produced — it is not an image or an icon, it is
+     Playfair Display's italic ampersand, which the site already loads for its
+     headings. So this costs no extra font request and stays crisp at any size.
+
+     Kept as one class so the glyph can be changed everywhere at once. To try a
+     different form, change the font-family below:
+       'Playfair Display'  — classical, looped  (current)
+       'Fraunces'          — the h1 face; quirkier, heavier tail
+     ------------------------------------------------------------------ */
+  .amp {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    /* Optically matched: the italic ampersand reads small and sits high next to
+       upright caps, so it is nudged up in size and down on the baseline. */
+    font-size: 1.15em;
+    line-height: 0;
+    vertical-align: -0.02em;
+    padding-inline: 0.04em;
+  }
+}
+
 @layer utilities {
   @keyframes slow-zoom {
     0% {
