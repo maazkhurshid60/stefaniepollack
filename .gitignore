@@ -51,6 +51,9 @@ coverage/
 Thumbs.db
 Desktop.ini
 
+# Client-provided raw source files (docs, photos, video) — not app code
+/materal/
+
 # Misc
 .cache/
 .temp/

@@ -1,6 +1,7 @@
 export const featuredProperties = [
   {
     id: 1,
+    slug: "10956-wrightwood-lane",
     address: "10956 Wrightwood Lane",
     city: "Studio City, CA",
     price: "$3,495,000",
@@ -12,6 +13,7 @@ export const featuredProperties = [
   },
   {
     id: 2,
+    slug: "4233-laurel-canyon-blvd",
     address: "4233 Laurel Canyon Blvd",
     city: "Studio City, CA",
     price: "$2,875,000",
@@ -23,6 +25,7 @@ export const featuredProperties = [
   },
   {
     id: 3,
+    slug: "12631-mulholland-drive",
     address: "12631 Mulholland Drive",
     city: "Beverly Hills, CA",
     price: "$5,200,000",
@@ -34,6 +37,7 @@ export const featuredProperties = [
   },
   {
     id: 4,
+    slug: "8901-sunshine-terrace",
     address: "8901 Sunshine Terrace",
     city: "Studio City, CA",
     price: "$1,950,000",
@@ -45,6 +49,7 @@ export const featuredProperties = [
   },
   {
     id: 5,
+    slug: "4821-woodrow-wilson-drive",
     address: "4821 Woodrow Wilson Drive",
     city: "Los Feliz, CA",
     price: "$4,850,000",
@@ -56,6 +61,7 @@ export const featuredProperties = [
   },
   {
     id: 6,
+    slug: "2210-outpost-drive",
     address: "2210 Outpost Drive",
     city: "Hollywood Hills, CA",
     price: "$3,750,000",
@@ -70,6 +76,7 @@ export const featuredProperties = [
 export const soldListings = [
   {
     id: 1,
+    slug: "11548-moorpark-street",
     address: "11548 Moorpark Street",
     city: "Studio City, CA",
     soldPrice: "$2,425,000",
@@ -81,6 +88,7 @@ export const soldListings = [
   },
   {
     id: 2,
+    slug: "3915-oakdale-avenue",
     address: "3915 Oakdale Avenue",
     city: "Studio City, CA",
     soldPrice: "$1,875,000",
@@ -92,6 +100,7 @@ export const soldListings = [
   },
   {
     id: 3,
+    slug: "12417-valleyheart-drive",
     address: "12417 Valleyheart Drive",
     city: "Studio City, CA",
     soldPrice: "$3,100,000",
@@ -103,6 +112,7 @@ export const soldListings = [
   },
   {
     id: 4,
+    slug: "4521-carpenter-avenue",
     address: "4521 Carpenter Avenue",
     city: "Studio City, CA",
     soldPrice: "$2,750,000",
@@ -114,6 +124,7 @@ export const soldListings = [
   },
   {
     id: 5,
+    slug: "10870-bloomfield-street",
     address: "10870 Bloomfield Street",
     city: "Studio City, CA",
     soldPrice: "$1,650,000",
@@ -125,6 +136,7 @@ export const soldListings = [
   },
   {
     id: 6,
+    slug: "3890-lankershim-blvd",
     address: "3890 Lankershim Blvd",
     city: "Studio City, CA",
     soldPrice: "$2,200,000",
@@ -154,16 +166,86 @@ export const testimonials = [
   {
     id: 3,
     quote:
-      "Stefanie made the entire home buying process seamless and enjoyable. Her deep knowledge of Studio City, her negotiation skills, and her genuine care for her clients set her apart from every other agent we have worked with.",
-    author: "Jennifer M.",
-    location: "Sherman Oaks, CA",
+      "Stefanie's total management and coordination of staging as well as internet and print advertising was outstanding. Our open houses were extremely well-attended. We had an offer in one day that was significantly over asking and we were in escrow in less than 48 hours.",
+    author: "Grace V.",
+    location: "Seller, Studio City",
   },
   {
     id: 4,
     quote:
-      "Selling our family home was an emotional journey, and Stefanie handled every detail with grace and professionalism. Her marketing strategy was exceptional, and we sold above asking with multiple offers.",
-    author: "David & Sarah K.",
-    location: "Studio City, CA",
+      "I am very grateful to Stefanie, and her support team, for her hard work and dedication to getting my dad the outcome that he envisioned for himself. Stefanie came up with a successful strategic plan that generated at least 10 strong offers.",
+    author: "Melissa Schwarm",
+    location: "Seller, Studio City",
+  },
+];
+
+// Fuller set for the About page grid, sourced from the client's Yelp/Google
+// review exports (Testimonials 2024.docx). Location is "Google Review" where
+// the source review didn't include a city.
+export const allTestimonials = [
+  ...testimonials,
+  {
+    id: 5,
+    quote:
+      "STOP looking for another agent - you simply cannot find one better than Stefanie. From the moment we found her online, we were impressed with her professionalism and expertise in Studio City real estate. If you text her, she responds promptly. Call her, she responds promptly. Have a concern? She figures out how to address it.",
+    author: "Brian S.",
+    location: "Yelp Review",
+  },
+  {
+    id: 6,
+    quote:
+      "Trust — she told me how it was and was a straight shooter from the very beginning. Commitment — she was committed to making sure she does everything in her power to get it done. Knowledge — not only was she selling my home but selling the whole city. She knew so much about the area that made all the difference.",
+    author: "Raffi Alan M.",
+    location: "Yelp Review",
+  },
+  {
+    id: 7,
+    quote:
+      "Stefanie is an amazing realtor! She took the time to explain what it would take to sell our house for the price we wanted, then had us stage it so it looked like a model home. She did open houses every weekend until we found our buyer and was an excellent negotiator the whole way through.",
+    author: "Leanne S.",
+    location: "Sherman Oaks, CA",
+  },
+  {
+    id: 8,
+    quote:
+      "If you are looking for the best Realtor in Studio City, look no further! Stefanie makes the home buying process easy and fun. She is always furthering her education in realty and stays up to date on all the market trends. She was attentive to our requests and didn't pressure us with her opinions.",
+    author: "Valerie B.",
+    location: "Valley Glen, CA",
+  },
+  {
+    id: 9,
+    quote:
+      "Stefanie expertly guided us through a market that was changing by the minute. I know she has a lot of other projects, but she made us feel like her only clients — constantly doing open houses, appointments, and follow-ups with agents and potential buyers, and coming up with creative ideas to change things up.",
+    author: "Stephanie K.",
+    location: "Los Angeles, CA",
+  },
+  {
+    id: 10,
+    quote:
+      "From start to finish she was knowledgeable, very organized, and completely on top of everything. Being first time home buyers, we asked a ton of questions — Stefanie answered every single one with intelligence, professionalism, and patience. She helped us find our dream home.",
+    author: "Denise K.",
+    location: "North Hollywood, CA",
+  },
+  {
+    id: 11,
+    quote:
+      "Stefanie is UH...MAZING. She walked my husband and I through the entire selling process and set realistic expectations, which I really appreciated. She helped us present our house in the most attractive way possible and when offers came in, she was amazing at negotiating.",
+    author: "Brittany Sarkisian",
+    location: "Google Review",
+  },
+  {
+    id: 12,
+    quote:
+      "Stefanie helped us find our dream home in Valley Village after patiently helping us navigate through neighborhoods, school districts, and all the other considerations. She was incredibly responsive and always there for our needs, including finding the best ways to present our offers.",
+    author: "Eric Held",
+    location: "Valley Village, CA",
+  },
+  {
+    id: 13,
+    quote:
+      "During the most difficult of times, with a raging pandemic and an almost impossible financing climate, Stefanie was an absolute champion for us. Patient, experienced, professional, direct, knowledgeable, resourceful, accessible, well connected — she had the right answer for us at every step of the way.",
+    author: "Jon D.",
+    location: "Encino, CA",
   },
 ];
 

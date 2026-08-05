@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import {
   Mail,
   Phone,
@@ -21,8 +21,8 @@ const footerLinks = {
     { label: "Contact", href: "/contact" },
   ],
   explore: [
-    { label: "Market Updates", href: "/resources" },
-    { label: "Neighborhood Guides", href: "/resources" },
+    { label: "Neighborhoods", href: "/neighborhoods" },
+    { label: "Philanthropy", href: "/philanthropy" },
     { label: "Home Valuation", href: "/sellers" },
     { label: "Sold Properties", href: "/listings" },
   ],
@@ -44,7 +44,7 @@ const footerLinks = {
   ],
 };
 
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -52,15 +52,14 @@ const containerVariants = {
   },
 };
 
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
 };
 
 export default function Footer() {
   return (
-    <footer className="bg-background-50 px-3 sm:px-4 md:px-6 pb-3 sm:pb-4 md:pb-6">
-      <div className="bg-foreground-900 text-background-100 rounded-[24px] md:rounded-[32px] overflow-hidden">
+    <footer className="w-full bg-foreground-900 text-background-100">
         {/* Main Footer */}
         <motion.div
           className="w-full px-6 md:px-10 lg:px-16 pt-16 md:pt-20 pb-12 md:pb-16"
@@ -182,9 +181,9 @@ export default function Footer() {
                   Licensing
                 </h4>
                 <img
-                  src="https://storage.helloreaddy.io/project_files/ea13b1fb-fd83-432d-a9dd-911da517d8bf/008bc2c8-2bbc-4b60-b87a-02ae6b21a208_compressed_Compass-Logo.webp"
+                  src="/images/compass-white.png"
                   alt="Compass Real Estate"
-                  className="h-5 md:h-6 w-auto brightness-0 invert opacity-90 mb-4"
+                  className="h-5 md:h-6 w-auto opacity-90 mb-4"
                 />
                 <div className="space-y-1.5">
                   <p className="text-xs text-background-500">
@@ -237,7 +236,6 @@ export default function Footer() {
             </div>
           </div>
         </div>
-      </div>
     </footer>
   );
 }

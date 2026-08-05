@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { MoreHorizontal, BedDouble, Bath, Ruler, ArrowRight } from "lucide-react";
 import { featuredProperties, soldListings } from "@/mocks/home";
 
-function PropertyCard({ property, type }: { property: typeof featuredProperties[0]; type: "available" | "sold" }) {
+function PropertyCard({ property, type }: { property: typeof featuredProperties[0] | typeof soldListings[0]; type: "available" | "sold" }) {
   const isSold = type === "sold";
   return (
     <motion.div
@@ -45,7 +45,7 @@ function PropertyCard({ property, type }: { property: typeof featuredProperties[
 
         {/* Price */}
         <p className="text-2xl md:text-3xl font-heading text-primary-700 mb-1">
-          {isSold ? (property as typeof soldListings[0]).soldPrice : property.price}
+          {isSold ? (property as typeof soldListings[0]).soldPrice : (property as typeof featuredProperties[0]).price}
         </p>
 
         {/* Address */}
@@ -71,7 +71,7 @@ function PropertyCard({ property, type }: { property: typeof featuredProperties[
 
         {/* View Details */}
         <a
-          href="/listings"
+          href={`/listings/${property.slug}`}
           className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground-800 hover:text-primary-700 transition-colors whitespace-nowrap"
         >
           View Details

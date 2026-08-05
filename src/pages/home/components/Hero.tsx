@@ -1,15 +1,12 @@
 import { motion } from "framer-motion";
+import HeroVideo from "./HeroVideo";
 
 export default function Hero() {
   return (
     <section className="relative w-full h-screen min-h-[600px] overflow-hidden">
-      {/* Background Image */}
+      {/* Background video (poster-only on mobile / reduced-motion / data-saver) */}
       <div className="absolute inset-0">
-        <img
-          src="https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=1920&h=1080&fit=crop&q=80"
-          alt="Luxury home exterior"
-          className="w-full h-full object-cover scale-105 animate-slow-zoom"
-        />
+        <HeroVideo />
         {/* Dark overlay gradient */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/50" />
         <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20" />
@@ -85,7 +82,7 @@ export default function Hero() {
             Brokered by
           </span>
           <img
-            src="https://storage.helloreaddy.io/project_files/ea13b1fb-fd83-432d-a9dd-911da517d8bf/008bc2c8-2bbc-4b60-b87a-02ae6b21a208_compressed_Compass-Logo.webp"
+            src="/images/compass-white.png"
             alt="Compass Real Estate"
             className="h-6 md:h-8 w-auto opacity-60 hover:opacity-100 transition-opacity duration-500 cursor-pointer"
           />

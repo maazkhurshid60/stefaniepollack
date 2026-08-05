@@ -1,0 +1,52 @@
+import { motion } from "framer-motion";
+
+export default function PageHero({
+  eyebrow,
+  title,
+  italicTitle,
+  subtitle,
+  image,
+  imageAlt,
+}: {
+  eyebrow: string;
+  title: string;
+  italicTitle?: string;
+  subtitle?: string;
+  image: string;
+  imageAlt: string;
+}) {
+  return (
+    <section className="relative w-full h-[55vh] min-h-[420px] max-h-[640px] overflow-hidden">
+      <div className="absolute inset-0">
+        <img src={image} alt={imageAlt} className="w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/55" />
+      </div>
+
+      <div className="relative z-10 flex flex-col items-center justify-center h-full text-center px-6 pt-20">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+        >
+          <p className="text-white/70 text-xs md:text-sm font-medium tracking-[0.3em] uppercase mb-5">
+            {eyebrow}
+          </p>
+          <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl text-white font-medium leading-tight">
+            {title}
+            {italicTitle && (
+              <>
+                {" "}
+                <span className="italic font-normal">{italicTitle}</span>
+              </>
+            )}
+          </h1>
+          {subtitle && (
+            <p className="mt-5 text-white/75 text-sm md:text-base max-w-xl mx-auto leading-relaxed">
+              {subtitle}
+            </p>
+          )}
+        </motion.div>
+      </div>
+    </section>
+  );
+}
