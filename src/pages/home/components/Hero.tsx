@@ -71,20 +71,20 @@ export default function Hero() {
           </div>
         </motion.div>
 
-        {/* Compass badge — bottom-right */}
+        {/* Compass badge — bottom-left (bottom-right is the video's own burned-in watermark) */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.2, duration: 0.8 }}
-          className="absolute bottom-8 right-8 md:bottom-10 md:right-12 flex flex-col items-end gap-1.5"
+          className="absolute bottom-8 left-8 md:bottom-10 md:left-12 flex items-center gap-3.5 px-5 py-3 rounded-full bg-black/25 backdrop-blur-sm border border-white/15"
         >
-          <span className="text-white/40 text-[10px] tracking-[0.25em] uppercase font-medium">
+          <span className="text-white/70 text-[10px] tracking-[0.25em] uppercase font-medium whitespace-nowrap leading-none">
             Brokered by
           </span>
           <img
             src="/images/compass-white.png"
             alt="Compass Real Estate"
-            className="h-6 md:h-8 w-auto opacity-60 hover:opacity-100 transition-opacity duration-500 cursor-pointer"
+            className="h-8 md:h-10 w-auto block"
           />
         </motion.div>
       </div>
