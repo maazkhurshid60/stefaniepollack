@@ -5,6 +5,7 @@ import i18n from "./i18n";
 import Header from "./components/feature/Header";
 import Footer from "./components/feature/Footer";
 import ScrollToTop from "./components/feature/ScrollToTop";
+import Cursor from "./components/feature/Cursor";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
           </main>
           <Footer />
           <ScrollToTop />
+          <Cursor />
         </div>
       </BrowserRouter>
     </I18nextProvider>
