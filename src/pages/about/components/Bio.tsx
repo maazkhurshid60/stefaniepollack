@@ -78,6 +78,19 @@ export default function Bio() {
               Stefanie Pollack &bull; DRE #01815614
             </p>
 
+            <div className="mt-6 flex flex-wrap items-center gap-x-8 gap-y-4">
+              <img
+                src="/images/awards/realtrends-verified.png"
+                alt="RealTrends Verified"
+                className="h-9 w-auto"
+              />
+              <img
+                src="/images/awards/la-magazine-all-stars.png"
+                alt="Los Angeles Magazine Real Estate All-Stars"
+                className="h-14 w-auto"
+              />
+            </div>
+
             <div className="mt-10 flex flex-wrap items-center gap-4">
               <a
                 href="/contact"

@@ -85,6 +85,20 @@ export default function About() {
                 <p className="text-xs text-foreground-500 mt-1">Families Helped</p>
               </div>
             </div>
+
+            {/* Awards & recognition */}
+            <div className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-4">
+              <img
+                src="/images/awards/realtrends-verified.png"
+                alt="RealTrends Verified"
+                className="h-8 w-auto"
+              />
+              <img
+                src="/images/awards/la-magazine-all-stars.png"
+                alt="Los Angeles Magazine Real Estate All-Stars"
+                className="h-12 w-auto"
+              />
+            </div>
           </motion.div>
         </div>
       </div>
