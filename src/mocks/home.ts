@@ -1,3 +1,30 @@
+/** Companion interior/backyard shots for a listing's detail-page gallery.
+ *
+ * The readdy.ai search-image endpoint used for each listing's single card
+ * photo only serves the exact images baked into the original template at
+ * generation time — it 400s ("hash not found") on any new query text, even
+ * reusing the same working dimensions. It's not a live text-to-image API, so
+ * it can't produce new interior shots. These use Unsplash's CDN instead
+ * (verified working, same approach already used for the blog article images
+ * further down this file) — generic, freely-licensed interiors, cycled by
+ * index so each listing gets a distinct-ish combination. */
+const INTERIOR_POOLS = {
+  kitchen: ["1556911220-e15b29be8c8f", "1600585154340-be6161a56a0c", "1600607687939-ce8a6c25118c"],
+  living: ["1600210492486-724fe5c67fb0", "1616486338812-3dadae4b4ace", "1600121848594-d8644e57abab"],
+  bedroom: ["1616594039964-ae9021a400a0", "1560448204-e02f11c3d0e2", "1522771739844-6a9f6d5f14af"],
+  outdoor: ["1600566753190-17f0baa2a6c3", "1600585154526-990dced4db0d", "1600047509807-ba8f99d2cdde"],
+};
+
+function galleryShots(index: number): string[] {
+  const unsplash = (id: string) => `https://images.unsplash.com/photo-${id}?q=80&w=1200&auto=format&fit=crop`;
+  return [
+    unsplash(INTERIOR_POOLS.kitchen[index % INTERIOR_POOLS.kitchen.length]),
+    unsplash(INTERIOR_POOLS.living[index % INTERIOR_POOLS.living.length]),
+    unsplash(INTERIOR_POOLS.bedroom[index % INTERIOR_POOLS.bedroom.length]),
+    unsplash(INTERIOR_POOLS.outdoor[index % INTERIOR_POOLS.outdoor.length]),
+  ];
+}
+
 export const featuredProperties = [
   {
     id: 1,
@@ -9,6 +36,10 @@ export const featuredProperties = [
     baths: 5,
     sqft: "4,250",
     image: "https://readdy.ai/api/search-image?query=Luxury%20modern%20farmhouse%20exterior%20with%20manicured%20lawn%20and%20mature%20trees%2C%20warm%20golden%20hour%20lighting%2C%20clean%20architectural%20photography%20style%2C%20high-end%20real%20estate%20presentation&width=600&height=800&seq=fp-01&orientation=portrait",
+    gallery: [
+      "https://readdy.ai/api/search-image?query=Luxury%20modern%20farmhouse%20exterior%20with%20manicured%20lawn%20and%20mature%20trees%2C%20warm%20golden%20hour%20lighting%2C%20clean%20architectural%20photography%20style%2C%20high-end%20real%20estate%20presentation&width=600&height=800&seq=fp-01&orientation=portrait",
+      ...galleryShots(0),
+    ],
     status: "available",
   },
   {
@@ -21,6 +52,10 @@ export const featuredProperties = [
     baths: 4,
     sqft: "3,680",
     image: "https://readdy.ai/api/search-image?query=Elegant%20Mediterranean%20villa%20with%20wrought%20iron%20details%20and%20lush%20landscaping%2C%20premium%20real%20estate%20photography%2C%20warm%20afternoon%20sunlight%2C%20clean%20minimal%20background&width=600&height=800&seq=fp-02&orientation=portrait",
+    gallery: [
+      "https://readdy.ai/api/search-image?query=Elegant%20Mediterranean%20villa%20with%20wrought%20iron%20details%20and%20lush%20landscaping%2C%20premium%20real%20estate%20photography%2C%20warm%20afternoon%20sunlight%2C%20clean%20minimal%20background&width=600&height=800&seq=fp-02&orientation=portrait",
+      ...galleryShots(1),
+    ],
     status: "available",
   },
   {
@@ -33,6 +68,10 @@ export const featuredProperties = [
     baths: 7,
     sqft: "6,100",
     image: "https://readdy.ai/api/search-image?query=Contemporary%20Beverly%20Hills%20mansion%20with%20sleek%20modern%20design%20and%20infinity%20pool%2C%20bright%20daylight%2C%20architectural%20photography%2C%20luxury%20home%20presentation&width=600&height=800&seq=fp-03&orientation=portrait",
+    gallery: [
+      "https://readdy.ai/api/search-image?query=Contemporary%20Beverly%20Hills%20mansion%20with%20sleek%20modern%20design%20and%20infinity%20pool%2C%20bright%20daylight%2C%20architectural%20photography%2C%20luxury%20home%20presentation&width=600&height=800&seq=fp-03&orientation=portrait",
+      ...galleryShots(2),
+    ],
     status: "available",
   },
   {
@@ -45,6 +84,10 @@ export const featuredProperties = [
     baths: 3,
     sqft: "2,400",
     image: "https://readdy.ai/api/search-image?query=Charming%20California%20bungalow%20with%20mature%20trees%20and%20warm%20natural%20light%2C%20inviting%20front%20porch%2C%20real%20estate%20photography%20style%2C%20soft%20neutral%20color%20palette&width=600&height=800&seq=fp-04&orientation=portrait",
+    gallery: [
+      "https://readdy.ai/api/search-image?query=Charming%20California%20bungalow%20with%20mature%20trees%20and%20warm%20natural%20light%2C%20inviting%20front%20porch%2C%20real%20estate%20photography%20style%2C%20soft%20neutral%20color%20palette&width=600&height=800&seq=fp-04&orientation=portrait",
+      ...galleryShots(3),
+    ],
     status: "available",
   },
   {
@@ -57,6 +100,10 @@ export const featuredProperties = [
     baths: 5,
     sqft: "4,800",
     image: "https://readdy.ai/api/search-image?query=Modern%20architectural%20masterpiece%20with%20floor-to-ceiling%20windows%20and%20hillside%20view%2C%20sunset%20lighting%2C%20luxury%20home%20photography%2C%20clean%20minimal%20composition&width=600&height=800&seq=fp-05&orientation=portrait",
+    gallery: [
+      "https://readdy.ai/api/search-image?query=Modern%20architectural%20masterpiece%20with%20floor-to-ceiling%20windows%20and%20hillside%20view%2C%20sunset%20lighting%2C%20luxury%20home%20photography%2C%20clean%20minimal%20composition&width=600&height=800&seq=fp-05&orientation=portrait",
+      ...galleryShots(4),
+    ],
     status: "available",
   },
   {
@@ -69,6 +116,10 @@ export const featuredProperties = [
     baths: 4,
     sqft: "3,600",
     image: "https://readdy.ai/api/search-image?query=Stunning%20contemporary%20home%20with%20glass%20walls%20and%20lush%20green%20landscaping%2C%20premium%20real%20estate%20photography%2C%20bright%20natural%20daylight%2C%20warm%20neutral%20tones&width=600&height=800&seq=fp-06&orientation=portrait",
+    gallery: [
+      "https://readdy.ai/api/search-image?query=Stunning%20contemporary%20home%20with%20glass%20walls%20and%20lush%20green%20landscaping%2C%20premium%20real%20estate%20photography%2C%20bright%20natural%20daylight%2C%20warm%20neutral%20tones&width=600&height=800&seq=fp-06&orientation=portrait",
+      ...galleryShots(5),
+    ],
     status: "available",
   },
 ];
@@ -84,6 +135,10 @@ export const soldListings = [
     baths: 3,
     sqft: "3,200",
     image: "https://readdy.ai/api/search-image?query=Classic%20Tudor-style%20home%20with%20stone%20facade%20and%20manicured%20garden%2C%20soft%20overcast%20lighting%2C%20professional%20real%20estate%20photography%2C%20warm%20earth%20tone%20palette&width=600&height=800&seq=sl-01&orientation=portrait",
+    gallery: [
+      "https://readdy.ai/api/search-image?query=Classic%20Tudor-style%20home%20with%20stone%20facade%20and%20manicured%20garden%2C%20soft%20overcast%20lighting%2C%20professional%20real%20estate%20photography%2C%20warm%20earth%20tone%20palette&width=600&height=800&seq=sl-01&orientation=portrait",
+      ...galleryShots(0),
+    ],
     dateSold: "Dec 2025",
   },
   {
@@ -96,6 +151,10 @@ export const soldListings = [
     baths: 2,
     sqft: "2,100",
     image: "https://readdy.ai/api/search-image?query=Mid-century%20modern%20home%20with%20clean%20lines%20and%20large%20windows%2C%20desert%20landscaping%2C%20golden%20hour%20photography%2C%20premium%20real%20estate%20presentation&width=600&height=800&seq=sl-02&orientation=portrait",
+    gallery: [
+      "https://readdy.ai/api/search-image?query=Mid-century%20modern%20home%20with%20clean%20lines%20and%20large%20windows%2C%20desert%20landscaping%2C%20golden%20hour%20photography%2C%20premium%20real%20estate%20presentation&width=600&height=800&seq=sl-02&orientation=portrait",
+      ...galleryShots(1),
+    ],
     dateSold: "Nov 2025",
   },
   {
@@ -108,6 +167,10 @@ export const soldListings = [
     baths: 4,
     sqft: "3,800",
     image: "https://readdy.ai/api/search-image?query=Grand%20colonial%20estate%20with%20white%20columns%20and%20circular%20driveway%2C%20mature%20oak%20trees%2C%20bright%20daylight%2C%20architectural%20photography%20style&width=600&height=800&seq=sl-03&orientation=portrait",
+    gallery: [
+      "https://readdy.ai/api/search-image?query=Grand%20colonial%20estate%20with%20white%20columns%20and%20circular%20driveway%2C%20mature%20oak%20trees%2C%20bright%20daylight%2C%20architectural%20photography%20style&width=600&height=800&seq=sl-03&orientation=portrait",
+      ...galleryShots(2),
+    ],
     dateSold: "Oct 2025",
   },
   {
@@ -120,6 +183,10 @@ export const soldListings = [
     baths: 4,
     sqft: "3,450",
     image: "https://readdy.ai/api/search-image?query=Rustic%20modern%20mountain%20home%20with%20wood%20and%20stone%20exterior%2C%20forest%20backdrop%2C%20warm%20ambient%20lighting%2C%20real%20estate%20photography%20style&width=600&height=800&seq=sl-04&orientation=portrait",
+    gallery: [
+      "https://readdy.ai/api/search-image?query=Rustic%20modern%20mountain%20home%20with%20wood%20and%20stone%20exterior%2C%20forest%20backdrop%2C%20warm%20ambient%20lighting%2C%20real%20estate%20photography%20style&width=600&height=800&seq=sl-04&orientation=portrait",
+      ...galleryShots(3),
+    ],
     dateSold: "Sep 2025",
   },
   {
@@ -132,6 +199,10 @@ export const soldListings = [
     baths: 2,
     sqft: "1,950",
     image: "https://readdy.ai/api/search-image?query=Elegant%20Georgian-style%20home%20with%20red%20brick%20and%20white%20trim%2C%20formal%20garden%2C%20soft%20natural%20light%2C%20premium%20real%20estate%20photography&width=600&height=800&seq=sl-05&orientation=portrait",
+    gallery: [
+      "https://readdy.ai/api/search-image?query=Elegant%20Georgian-style%20home%20with%20red%20brick%20and%20white%20trim%2C%20formal%20garden%2C%20soft%20natural%20light%2C%20premium%20real%20estate%20photography&width=600&height=800&seq=sl-05&orientation=portrait",
+      ...galleryShots(4),
+    ],
     dateSold: "Aug 2025",
   },
   {
@@ -144,6 +215,10 @@ export const soldListings = [
     baths: 3,
     sqft: "2,850",
     image: "https://readdy.ai/api/search-image?query=Coastal%20contemporary%20home%20with%20weathered%20wood%20siding%20and%20ocean%20view%20terrace%2C%20bright%20sunny%20day%2C%20luxury%20real%20estate%20photography%20style&width=600&height=800&seq=sl-06&orientation=portrait",
+    gallery: [
+      "https://readdy.ai/api/search-image?query=Coastal%20contemporary%20home%20with%20weathered%20wood%20siding%20and%20ocean%20view%20terrace%2C%20bright%20sunny%20day%2C%20luxury%20real%20estate%20photography%20style&width=600&height=800&seq=sl-06&orientation=portrait",
+      ...galleryShots(5),
+    ],
     dateSold: "Jul 2025",
   },
 ];

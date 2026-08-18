@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { Heart, Share2, BedDouble, Bath, Ruler, ArrowLeft } from "lucide-react";
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Heart, Share2, BedDouble, Bath, Ruler, ArrowLeft, ChevronLeft, ChevronRight, Camera } from "lucide-react";
 import { featuredProperties, soldListings } from "@/mocks/home";
 import NotFound from "../../NotFound";
 
@@ -21,10 +21,19 @@ export default function PropertyDetail() {
   const { slug } = useParams();
   const [saved, setSaved] = useState(false);
   const [shareLabel, setShareLabel] = useState("Share");
+  const [activeIndex, setActiveIndex] = useState(0);
 
   const match = findProperty(slug);
+
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [slug]);
+
   if (!match) return <NotFound />;
   const { property, isSold } = match;
+  const gallery = property.gallery?.length ? property.gallery : [property.image];
+  const showPrev = () => setActiveIndex((i) => (i - 1 + gallery.length) % gallery.length);
+  const showNext = () => setActiveIndex((i) => (i + 1) % gallery.length);
 
   const price = isSold
     ? (property as (typeof soldListings)[number]).soldPrice
@@ -56,14 +65,25 @@ export default function PropertyDetail() {
 
   return (
     <div className="w-full">
-      {/* Hero image — full-bleed behind the fixed header, like every other interior page */}
+      {/* Hero gallery — full-bleed behind the fixed header, like every other interior page */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.7 }}
-        className="relative w-full h-[60vh] min-h-[440px] max-h-[680px] overflow-hidden"
+        className="relative w-full h-[60vh] min-h-[440px] max-h-[680px] overflow-hidden group"
       >
-        <img src={property.image} alt={property.address} className="w-full h-full object-cover" />
+        <AnimatePresence mode="wait">
+          <motion.img
+            key={activeIndex}
+            src={gallery[activeIndex]}
+            alt={`${property.address} — photo ${activeIndex + 1} of ${gallery.length}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        </AnimatePresence>
         <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/10 to-black/40" />
 
         <a
@@ -78,6 +98,48 @@ export default function PropertyDetail() {
           <div className="absolute bottom-6 left-6 md:left-10 lg:left-16 px-4 py-2 bg-foreground-950/90 text-background-50 text-xs font-semibold tracking-[0.2em] uppercase rounded-full">
             Sold
           </div>
+        )}
+
+        {gallery.length > 1 && (
+          <>
+            {/* Prev / Next */}
+            <button
+              onClick={showPrev}
+              aria-label="Previous photo"
+              className="absolute top-1/2 left-4 md:left-6 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full bg-black/30 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-black/50"
+            >
+              <ChevronLeft className="w-5 h-5" strokeWidth={1.5} />
+            </button>
+            <button
+              onClick={showNext}
+              aria-label="Next photo"
+              className="absolute top-1/2 right-4 md:right-6 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full bg-black/30 text-white backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-black/50"
+            >
+              <ChevronRight className="w-5 h-5" strokeWidth={1.5} />
+            </button>
+
+            {/* Photo counter */}
+            <div className="absolute top-24 md:top-28 right-6 md:right-10 lg:right-16 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/30 backdrop-blur-sm text-white text-xs font-medium">
+              <Camera className="w-3.5 h-3.5" strokeWidth={1.5} />
+              {activeIndex + 1} / {gallery.length}
+            </div>
+
+            {/* Thumbnail strip */}
+            <div className="absolute bottom-6 right-6 md:right-10 lg:right-16 hidden sm:flex items-center gap-2">
+              {gallery.map((src, i) => (
+                <button
+                  key={src}
+                  onClick={() => setActiveIndex(i)}
+                  aria-label={`View photo ${i + 1}`}
+                  className={`w-14 h-10 rounded-md overflow-hidden ring-2 transition-all duration-300 ${
+                    i === activeIndex ? "ring-background-50" : "ring-transparent opacity-70 hover:opacity-100"
+                  }`}
+                >
+                  <img src={src} alt="" className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          </>
         )}
       </motion.div>
 

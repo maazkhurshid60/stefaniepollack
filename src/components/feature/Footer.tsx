@@ -25,6 +25,7 @@ const footerLinks = {
     { label: "Philanthropy", href: "/philanthropy" },
     { label: "Home Valuation", href: "/sellers" },
     { label: "Sold Properties", href: "/listings" },
+    { label: "Blog", href: "/blog" },
   ],
   contact: [
     { Icon: Mail as LucideIcon, label: "stefanie@pollackhomes.com", href: "mailto:stefanie@pollackhomes.com" },
