@@ -53,6 +53,7 @@ Desktop.ini
 
 # Client-provided raw source files (docs, photos, video) — not app code
 /materal/
+/v1.mp4
 
 # Misc
 .cache/

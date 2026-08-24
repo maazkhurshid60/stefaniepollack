@@ -5,6 +5,7 @@ import Articles from "./components/Articles";
 import Stats from "./components/Stats";
 import FeaturedProperties from "./components/FeaturedProperties";
 import Testimonials from "./components/Testimonials";
+import OfficeMap from "./components/OfficeMap";
 import CTASection from "./components/CTASection";
 import Newsletter from "./components/Newsletter";
 
@@ -18,6 +19,7 @@ export default function Home() {
       <Stats />
       <FeaturedProperties />
       <Testimonials />
+      <OfficeMap />
       <CTASection />
       <Newsletter />
     </div>

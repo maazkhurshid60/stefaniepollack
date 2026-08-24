@@ -222,6 +222,7 @@ export default function Footer() {
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
               <p className="text-xs text-background-600 text-center sm:text-left">
                 &copy; {new Date().getFullYear()} Stefanie Pollack Real Estate. All rights reserved.
+                {" "}&middot; Site by EM Creative Studio
               </p>
               <div className="flex items-center gap-5">
                 {footerLinks.legal.map((link) => (
