@@ -10,17 +10,24 @@ const base = process.env.BASE_PATH || "/";
 const isPreview = process.env.IS_PREVIEW ? true : false;
 //const proxyPlugins = isPreview ? [readdyJsxRuntimeProxyPlugin()] : [];
 
-/** Mirrors api/idx/[...path].ts locally so `npm run dev` works without the
- *  Vercel CLI — same proxyIdxRequest() logic, just fed by a Connect middleware
- *  instead of a Vercel Function. */
+/** Mirrors api/idx.ts locally so `npm run dev` works without the Vercel CLI
+ *  — same proxyIdxRequest() logic, just fed by a Connect middleware instead
+ *  of a Vercel Function. Path travels as `?path=` (see api/idx.ts for why),
+ *  matching the flat-file structure that's actually reliable in production. */
 function idxDevProxyPlugin(): Plugin {
   return {
     name: "idx-dev-proxy",
     configureServer(server) {
       server.middlewares.use("/api/idx", async (req, res) => {
         try {
-          const path = (req.url || "").replace(/^\/+/, "").split("?")[0];
-          const query = new URLSearchParams((req.url || "").split("?")[1] || "");
+          const topLevel = new URLSearchParams((req.url || "").split("?")[1] || "");
+          const pathParam = topLevel.get("path") || "";
+          const [path, embeddedQuery] = pathParam.split("?");
+          const query = new URLSearchParams(embeddedQuery || "");
+          for (const [k, v] of topLevel.entries()) {
+            if (k === "path") continue;
+            query.append(k, v);
+          }
 
           let jsonBody: Record<string, unknown> | undefined;
           if (req.method !== "GET" && req.method !== "HEAD") {

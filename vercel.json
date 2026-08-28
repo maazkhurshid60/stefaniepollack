@@ -1,7 +1,6 @@
 {
   "outputDirectory": "out",
   "rewrites": [
-    { "source": "/api/idx/:path*", "destination": "/api/idx/[...path]" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }

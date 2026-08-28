@@ -1,8 +1,13 @@
 /** Client-side IDX Broker API layer.
  *
- * Talks only to same-origin `/api/idx/...` (see api/idx/[...path].ts and the
- * matching vite dev middleware in vite.config.ts) — the IDX Broker access key
- * never reaches the browser.
+ * Talks only to same-origin `/api/idx` (see api/idx.ts and the matching vite
+ * dev middleware in vite.config.ts) — the IDX Broker access key never
+ * reaches the browser. The actual IDX API path is passed as a `?path=`
+ * query param rather than a URL path segment — Vercel's routing manifest
+ * for non-Next.js projects doesn't reliably detect nested dynamic catch-all
+ * functions (confirmed live: api/idx/[...path].ts 404'd in production even
+ * though it deployed correctly), so this sticks to one flat function file,
+ * the pattern already proven to work (api/photo.ts).
  *
  * `AvailableProperty` / `SoldProperty` deliberately mirror the field names
  * used by the old src/mocks/home.ts shapes (address, city, price/soldPrice,
@@ -139,8 +144,15 @@ function mapSold(listing: RawIdxListing): SoldProperty {
 
 type FetchInit = { method?: string; headers?: Record<string, string>; body?: string };
 
+/** `path` may itself carry a query string (e.g. "leads/lead?email=x") — that's
+ *  fine, it travels intact as part of the single `path` param's value and
+ *  api/idx.ts splits it back apart server-side. */
+function idxUrl(path: string): string {
+  return `/api/idx?path=${encodeURIComponent(path)}`;
+}
+
 async function idxFetch<T>(path: string, init?: FetchInit): Promise<T> {
-  const res = await fetch(`/api/idx/${path}`, init);
+  const res = await fetch(idxUrl(path), init);
   if (!res.ok) throw new Error(`IDX request failed: ${path} (${res.status})`);
   return res.json() as Promise<T>;
 }
@@ -207,7 +219,7 @@ export async function saveLeadSearch(
   leadId: string,
   input: { searchName: string; search: Record<string, string> }
 ): Promise<boolean> {
-  const res = await fetch(`/api/idx/leads/search/${leadId}`, {
+  const res = await fetch(idxUrl(`leads/search/${leadId}`), {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
@@ -242,6 +254,6 @@ export async function getLeadSearches(leadId: string): Promise<SavedSearch[]> {
 }
 
 export async function deleteLeadSearch(leadId: string, searchId: string): Promise<boolean> {
-  const res = await fetch(`/api/idx/leads/search/${leadId}/${searchId}`, { method: "DELETE" });
+  const res = await fetch(idxUrl(`leads/search/${leadId}/${searchId}`), { method: "DELETE" });
   return res.ok;
 }
