@@ -2,32 +2,37 @@ import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Share2, BedDouble, Bath, Ruler, ArrowLeft, ChevronLeft, ChevronRight, Camera } from "lucide-react";
-import { featuredProperties, soldListings } from "@/mocks/home";
+import { useIdxListings } from "@/hooks/useIdxListings";
+import type { AvailableProperty, SoldProperty } from "@/lib/idx";
+import { PHOTO_FALLBACK } from "@/lib/media";
 import NotFound from "../../NotFound";
 
-type PropertyMatch =
-  | { property: (typeof featuredProperties)[number]; isSold: false }
-  | { property: (typeof soldListings)[number]; isSold: true };
-
-function findProperty(slug: string | undefined): PropertyMatch | null {
-  const forSale = featuredProperties.find((p) => p.slug === slug);
-  if (forSale) return { property: forSale, isSold: false };
-  const sold = soldListings.find((p) => p.slug === slug);
-  if (sold) return { property: sold, isSold: true };
-  return null;
-}
+type PropertyMatch = { property: AvailableProperty | SoldProperty; isSold: boolean };
 
 export default function PropertyDetail() {
   const { slug } = useParams();
   const [saved, setSaved] = useState(false);
   const [shareLabel, setShareLabel] = useState("Share");
   const [activeIndex, setActiveIndex] = useState(0);
-
-  const match = findProperty(slug);
+  const { data, loading } = useIdxListings();
 
   useEffect(() => {
     setActiveIndex(0);
   }, [slug]);
+
+  if (loading) {
+    return <div className="w-full py-32 text-center text-sm text-foreground-500">Loading…</div>;
+  }
+
+  const match: PropertyMatch | null = data
+    ? (() => {
+        const forSale = data.available.find((p) => p.slug === slug);
+        if (forSale) return { property: forSale, isSold: false };
+        const sold = data.sold.find((p) => p.slug === slug);
+        if (sold) return { property: sold, isSold: true };
+        return null;
+      })()
+    : null;
 
   if (!match) return <NotFound />;
   const { property, isSold } = match;
@@ -35,14 +40,14 @@ export default function PropertyDetail() {
   const showPrev = () => setActiveIndex((i) => (i - 1 + gallery.length) % gallery.length);
   const showNext = () => setActiveIndex((i) => (i + 1) % gallery.length);
 
-  const price = isSold
-    ? (property as (typeof soldListings)[number]).soldPrice
-    : (property as (typeof featuredProperties)[number]).price;
-  const soldDateLabel = isSold ? (property as (typeof soldListings)[number]).dateSold : null;
+  const price = isSold ? (property as SoldProperty).soldPrice : (property as AvailableProperty).price;
+  const soldDateLabel = isSold ? (property as SoldProperty).dateSold : null;
 
-  const description = isSold
-    ? `${property.address} in ${property.city} sold in ${soldDateLabel} — a ${property.beds}-bedroom, ${property.baths}-bathroom home spanning approximately ${property.sqft} square feet. Curious what your own home could sell for in today's market? Reach out for a complimentary, no-obligation valuation.`
-    : `Located at ${property.address} in ${property.city}, this ${property.beds}-bedroom, ${property.baths}-bathroom home offers approximately ${property.sqft} square feet of living space. Reach out to schedule a private showing or to learn more about this property.`;
+  const description =
+    property.remarks ||
+    (isSold
+      ? `${property.address} in ${property.city} sold in ${soldDateLabel} — a ${property.beds}-bedroom, ${property.baths}-bathroom home spanning approximately ${property.sqft} square feet. Curious what your own home could sell for in today's market? Reach out for a complimentary, no-obligation valuation.`
+      : `Located at ${property.address} in ${property.city}, this ${property.beds}-bedroom, ${property.baths}-bathroom home offers approximately ${property.sqft} square feet of living space. Reach out to schedule a private showing or to learn more about this property.`);
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -77,6 +82,8 @@ export default function PropertyDetail() {
             key={activeIndex}
             src={gallery[activeIndex]}
             alt={`${property.address} — photo ${activeIndex + 1} of ${gallery.length}`}
+            referrerPolicy="no-referrer"
+            onError={(e) => (e.currentTarget.src = PHOTO_FALLBACK)}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -135,7 +142,13 @@ export default function PropertyDetail() {
                     i === activeIndex ? "ring-background-50" : "ring-transparent opacity-70 hover:opacity-100"
                   }`}
                 >
-                  <img src={src} alt="" className="w-full h-full object-cover" />
+                  <img
+                    src={src}
+                    alt=""
+                    referrerPolicy="no-referrer"
+                    onError={(e) => (e.currentTarget.src = PHOTO_FALLBACK)}
+                    className="w-full h-full object-cover"
+                  />
                 </button>
               ))}
             </div>

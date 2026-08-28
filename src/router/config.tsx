@@ -12,6 +12,7 @@ import Listings from "../pages/listings/page";
 import PropertyDetail from "../pages/listings/slug/page";
 import Blog from "../pages/blog/page";
 import BlogArticle from "../pages/blog/slug/page";
+import Account from "../pages/account/page";
 
 const routes: RouteObject[] = [
   {
@@ -61,6 +62,10 @@ const routes: RouteObject[] = [
   {
     path: "/blog/:slug",
     element: <BlogArticle />,
+  },
+  {
+    path: "/account",
+    element: <Account />,
   },
   {
     path: "*",

@@ -1,22 +1,37 @@
 import { useState, type FormEvent } from "react";
 import { motion } from "framer-motion";
+import { createLead } from "@/lib/idx";
 
 export default function ContactForm() {
-  const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const data = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const data = new FormData(form);
     const email = String(data.get("email") || "");
+    const name = String(data.get("name") || "").trim();
+    const phone = String(data.get("phone") || "");
+    const comments = String(data.get("message") || "");
+
     if (!email.includes("@")) {
       setStatus("error");
       setMessage("Please enter a valid email address.");
       return;
     }
-    setStatus("success");
-    setMessage("Thanks for reaching out — Stefanie will be in touch shortly.");
-    e.currentTarget.reset();
+
+    setStatus("sending");
+    const [firstName, ...rest] = name.split(" ");
+    try {
+      await createLead({ firstName: firstName || name, lastName: rest.join(" "), email, phone, comments });
+      setStatus("success");
+      setMessage("Thanks for reaching out — Stefanie will be in touch shortly.");
+      form.reset();
+    } catch {
+      setStatus("error");
+      setMessage("Something went wrong sending your message — please try again or call directly.");
+    }
     setTimeout(() => setStatus("idle"), 6000);
   };
 
@@ -90,12 +105,13 @@ export default function ContactForm() {
 
       <button
         type="submit"
-        className="mt-6 w-full sm:w-auto px-8 py-3.5 bg-foreground-950 text-background-50 text-sm font-medium tracking-wide uppercase rounded-md hover:bg-foreground-800 transition-colors whitespace-nowrap"
+        disabled={status === "sending"}
+        className="mt-6 w-full sm:w-auto px-8 py-3.5 bg-foreground-950 text-background-50 text-sm font-medium tracking-wide uppercase rounded-md hover:bg-foreground-800 transition-colors whitespace-nowrap disabled:opacity-60"
       >
-        Send Message
+        {status === "sending" ? "Sending…" : "Send Message"}
       </button>
 
-      {status !== "idle" && (
+      {status !== "idle" && status !== "sending" && (
         <motion.p
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}

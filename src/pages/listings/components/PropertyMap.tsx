@@ -3,16 +3,26 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { BedDouble, Bath } from "lucide-react";
-import { featuredProperties, soldListings } from "@/mocks/home";
+import type { AvailableProperty, SoldProperty } from "@/lib/idx";
+import { PHOTO_FALLBACK } from "@/lib/media";
 import { approximateLatLng } from "@/mocks/neighborhoodCoords";
 
-type Property = (typeof featuredProperties)[number] | (typeof soldListings)[number];
+type Property = AvailableProperty | SoldProperty;
 
 function priceLabel(property: Property, isSold: boolean) {
-  const raw = isSold ? (property as (typeof soldListings)[number]).soldPrice : (property as (typeof featuredProperties)[number]).price;
+  const raw = isSold ? (property as SoldProperty).soldPrice : (property as AvailableProperty).price;
   const n = Number(raw.replace(/[^0-9]/g, ""));
   if (!n) return raw;
   return n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1)}M` : `$${Math.round(n / 1000)}K`;
+}
+
+/** Real lat/lng from IDX when valid; falls back to a neighborhood-centroid
+ *  approximation only if a listing is ever missing coordinates. */
+function markerPosition(property: Property): [number, number] {
+  if (Number.isFinite(property.lat) && Number.isFinite(property.lng) && (property.lat !== 0 || property.lng !== 0)) {
+    return [property.lat, property.lng];
+  }
+  return approximateLatLng(property.city, Number(property.listingID) || 0);
 }
 
 function pinIcon(label: string, isSold: boolean) {
@@ -56,13 +66,19 @@ export default function PropertyMap({
           <TileLayer key={mapType} attribution={TILE_SOURCES[mapType].attribution} url={TILE_SOURCES[mapType].url} />
           {properties.map((property) => {
             const price = priceLabel(property, isSold);
-            const [lat, lng] = approximateLatLng(property.city, property.id);
+            const [lat, lng] = markerPosition(property);
             return (
               <Marker key={property.id} position={[lat, lng]} icon={pinIcon(price, isSold)}>
                 <Popup>
                   <a href={`/listings/${property.slug}`} className="block w-56 no-underline">
                     <div className="aspect-[4/3] overflow-hidden rounded-md mb-2">
-                      <img src={property.image} alt={property.address} className="w-full h-full object-cover" />
+                      <img
+                        src={property.image}
+                        alt={property.address}
+                        referrerPolicy="no-referrer"
+                        onError={(e) => (e.currentTarget.src = PHOTO_FALLBACK)}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                     <p className="text-[10px] font-medium tracking-[0.15em] uppercase text-foreground-500 mb-1">
                       {property.city}
@@ -107,7 +123,7 @@ export default function PropertyMap({
         </div>
       </div>
       <p className="mt-3 text-xs text-foreground-500 text-center">
-        Pin locations are approximate by neighborhood, not exact addresses.
+        Pin locations are provided by the MLS and may be approximate.
       </p>
     </div>
   );

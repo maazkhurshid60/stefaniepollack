@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MoreHorizontal, BedDouble, Bath, Ruler, ArrowRight } from "lucide-react";
-import { featuredProperties, soldListings } from "@/mocks/home";
+import { useIdxListings } from "@/hooks/useIdxListings";
+import type { AvailableProperty, SoldProperty } from "@/lib/idx";
+import { PHOTO_FALLBACK } from "@/lib/media";
 
-function PropertyCard({ property, type }: { property: typeof featuredProperties[0] | typeof soldListings[0]; type: "available" | "sold" }) {
+function PropertyCard({ property, type }: { property: AvailableProperty | SoldProperty; type: "available" | "sold" }) {
   const isSold = type === "sold";
   return (
     <motion.div
@@ -18,6 +20,8 @@ function PropertyCard({ property, type }: { property: typeof featuredProperties[
         <img
           src={property.image}
           alt={property.address}
+          referrerPolicy="no-referrer"
+          onError={(e) => (e.currentTarget.src = PHOTO_FALLBACK)}
           className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
         />
         {isSold && (
@@ -45,7 +49,7 @@ function PropertyCard({ property, type }: { property: typeof featuredProperties[
 
         {/* Price */}
         <p className="text-2xl md:text-3xl font-heading text-primary-700 mb-1">
-          {isSold ? (property as typeof soldListings[0]).soldPrice : (property as typeof featuredProperties[0]).price}
+          {isSold ? (property as SoldProperty).soldPrice : (property as AvailableProperty).price}
         </p>
 
         {/* Address */}
@@ -84,8 +88,9 @@ function PropertyCard({ property, type }: { property: typeof featuredProperties[
 
 export default function FeaturedProperties() {
   const [activeTab, setActiveTab] = useState<"available" | "sold">("available");
+  const { data, loading } = useIdxListings();
 
-  const properties = activeTab === "available" ? featuredProperties : soldListings;
+  const properties = activeTab === "available" ? data?.available ?? [] : data?.sold ?? [];
 
   return (
     <section className="w-full bg-background-50 py-20 md:py-28 lg:py-36">
@@ -140,20 +145,28 @@ export default function FeaturedProperties() {
           </div>
 
           {/* Grid */}
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.4 }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8"
-            >
-              {properties.slice(0, 6).map((property) => (
-                <PropertyCard key={property.id} property={property} type={activeTab} />
-              ))}
-            </motion.div>
-          </AnimatePresence>
+          {loading ? (
+            <p className="text-center text-sm text-foreground-500 py-12">Loading listings…</p>
+          ) : properties.length === 0 ? (
+            <p className="text-center text-sm text-foreground-500 py-12">
+              {activeTab === "available" ? "No active listings right now — check back soon." : "No sold listings to show yet."}
+            </p>
+          ) : (
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.4 }}
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8"
+              >
+                {(activeTab === "sold" ? properties : properties.slice(0, 6)).map((property) => (
+                  <PropertyCard key={property.id} property={property} type={activeTab} />
+                ))}
+              </motion.div>
+            </AnimatePresence>
+          )}
 
           {/* View All CTA */}
           <div className="text-center mt-14">

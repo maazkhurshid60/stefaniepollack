@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BedDouble, Bath, Ruler, Search, LayoutGrid, Map as MapIcon, ChevronDown } from "lucide-react";
-import { featuredProperties, soldListings } from "@/mocks/home";
+import { useIdxListings } from "@/hooks/useIdxListings";
+import { fetchSystemLinks, type AvailableProperty, type SoldProperty } from "@/lib/idx";
+import { PHOTO_FALLBACK } from "@/lib/media";
 import PropertyMap from "./PropertyMap";
+import SaveSearchButton from "./SaveSearchButton";
 
-type ListedProperty = (typeof featuredProperties)[number] | (typeof soldListings)[number];
+type ListedProperty = AvailableProperty | SoldProperty;
 
 function numericPrice(property: ListedProperty, isSold: boolean) {
-  const raw = isSold ? (property as (typeof soldListings)[0]).soldPrice : (property as (typeof featuredProperties)[0]).price;
+  const raw = isSold ? (property as SoldProperty).soldPrice : (property as AvailableProperty).price;
   return Number(raw.replace(/[^0-9]/g, ""));
 }
 
@@ -91,7 +94,7 @@ function DropdownOption({ label, selected, onClick }: { label: string; selected:
 }
 
 function PropertyCard({ property, isSold }: { property: ListedProperty; isSold: boolean }) {
-  const price = isSold ? (property as (typeof soldListings)[0]).soldPrice : (property as (typeof featuredProperties)[0]).price;
+  const price = isSold ? (property as SoldProperty).soldPrice : (property as AvailableProperty).price;
   return (
     <motion.a
       href={`/listings/${property.slug}`}
@@ -105,6 +108,8 @@ function PropertyCard({ property, isSold }: { property: ListedProperty; isSold: 
         <img
           src={property.image}
           alt={property.address}
+          referrerPolicy="no-referrer"
+          onError={(e) => (e.currentTarget.src = PHOTO_FALLBACK)}
           className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
         />
         {isSold && (
@@ -146,11 +151,25 @@ export default function PropertyGrid() {
   const [minBeds, setMinBeds] = useState(0);
   const [minBaths, setMinBaths] = useState(0);
   const [sort, setSort] = useState(SORT_OPTIONS[0].value);
+  const [fullSearchUrl, setFullSearchUrl] = useState<string | null>(null);
+
+  const { data, loading } = useIdxListings();
+
+  useEffect(() => {
+    fetchSystemLinks()
+      .then((links) => {
+        const pick = links.find((l) => l.name === "Map Search") || links.find((l) => l.category === "search");
+        if (pick) setFullSearchUrl(pick.url);
+      })
+      .catch(() => {
+        // full-MLS-search link is a nice-to-have — silently skip if it fails
+      });
+  }, []);
 
   const isSold = activeTab === "sold";
-  const base = isSold ? soldListings : featuredProperties;
 
   const properties = useMemo(() => {
+    const base: ListedProperty[] = isSold ? data?.sold ?? [] : data?.available ?? [];
     const q = query.trim().toLowerCase();
     const { min, max } = PRICE_OPTIONS[priceIdx];
     const filtered = base.filter((p) => {
@@ -166,7 +185,7 @@ export default function PropertyGrid() {
     else if (sort === "price-asc") sorted.sort((a, b) => numericPrice(a, isSold) - numericPrice(b, isSold));
     else if (sort === "beds-desc") sorted.sort((a, b) => b.beds - a.beds);
     return sorted;
-  }, [base, query, priceIdx, minBeds, minBaths, sort, isSold]);
+  }, [data, query, priceIdx, minBeds, minBaths, sort, isSold]);
 
   return (
     <section className="w-full bg-background-50 py-16 md:py-20 lg:py-24">
@@ -286,7 +305,7 @@ export default function PropertyGrid() {
           </div>
 
           {/* Results header */}
-          <div className="flex items-center justify-between gap-4 mb-8">
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
             <div>
               <h2 className="font-heading text-2xl md:text-3xl text-foreground-950">
                 {isSold ? "Recently Sold" : "Available Properties"}
@@ -296,26 +315,53 @@ export default function PropertyGrid() {
                 result{properties.length === 1 ? "" : "s"}
               </p>
             </div>
-            <label className="flex items-center gap-2 text-sm text-foreground-600">
-              <span className="hidden sm:inline">Sort:</span>
-              <select
-                value={sort}
-                onChange={(e) => setSort(e.target.value)}
-                className="pl-3 pr-8 py-2 bg-background-100 border border-background-300 rounded-full text-sm text-foreground-900 focus:outline-none focus:border-primary-500 transition-colors"
-              >
-                {SORT_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <div className="flex flex-wrap items-center gap-3">
+              {fullSearchUrl && (
+                <a
+                  href={fullSearchUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2.5 text-sm font-medium text-foreground-700 border border-background-300 rounded-full hover:border-foreground-400 transition-colors whitespace-nowrap"
+                >
+                  Search the full MLS
+                </a>
+              )}
+              <SaveSearchButton
+                searchName={`${isSold ? "Sold" : "Available"} homes${minBeds ? `, ${minBeds}+ beds` : ""}${
+                  priceIdx ? `, ${PRICE_OPTIONS[priceIdx].label}` : ""
+                }`}
+                criteria={{
+                  status: activeTab,
+                  q: query,
+                  priceMin: String(PRICE_OPTIONS[priceIdx].min || ""),
+                  priceMax: Number.isFinite(PRICE_OPTIONS[priceIdx].max) ? String(PRICE_OPTIONS[priceIdx].max) : "",
+                  beds: String(minBeds || ""),
+                  baths: String(minBaths || ""),
+                }}
+              />
+              <label className="flex items-center gap-2 text-sm text-foreground-600">
+                <span className="hidden sm:inline">Sort:</span>
+                <select
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value)}
+                  className="pl-3 pr-8 py-2 bg-background-100 border border-background-300 rounded-full text-sm text-foreground-900 focus:outline-none focus:border-primary-500 transition-colors"
+                >
+                  {SORT_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
           </div>
 
           {/* List + Map, side by side on desktop like a real search page */}
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-10">
             <div className={`lg:col-span-3 ${mobileView === "map" ? "hidden lg:block" : ""}`}>
-              {properties.length > 0 ? (
+              {loading ? (
+                <p className="py-20 text-center text-sm text-foreground-500">Loading listings…</p>
+              ) : properties.length > 0 ? (
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={`${activeTab}-${query}-${priceIdx}-${minBeds}-${minBaths}-${sort}`}

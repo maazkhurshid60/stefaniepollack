@@ -1,14 +1,82 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import { resolve } from "node:path";
 import AutoImport from "unplugin-auto-import/vite";
+import { proxyIdxRequest } from "./api/_idxProxy.ts";
+import { fetchPhoto } from "./api/_photoProxy.ts";
 // import { readdyJsxRuntimeProxyPlugin } from "./vite.jsx-runtime-proxy";
 
 const base = process.env.BASE_PATH || "/";
 const isPreview = process.env.IS_PREVIEW ? true : false;
 //const proxyPlugins = isPreview ? [readdyJsxRuntimeProxyPlugin()] : [];
+
+/** Mirrors api/idx/[...path].ts locally so `npm run dev` works without the
+ *  Vercel CLI — same proxyIdxRequest() logic, just fed by a Connect middleware
+ *  instead of a Vercel Function. */
+function idxDevProxyPlugin(): Plugin {
+  return {
+    name: "idx-dev-proxy",
+    configureServer(server) {
+      server.middlewares.use("/api/idx", async (req, res) => {
+        const path = (req.url || "").replace(/^\/+/, "").split("?")[0];
+        const query = new URLSearchParams((req.url || "").split("?")[1] || "");
+
+        let jsonBody: Record<string, unknown> | undefined;
+        if (req.method !== "GET" && req.method !== "HEAD") {
+          const chunks: Buffer[] = [];
+          for await (const chunk of req) chunks.push(chunk as Buffer);
+          const raw = Buffer.concat(chunks).toString("utf8");
+          if (raw) {
+            try {
+              jsonBody = JSON.parse(raw);
+            } catch {
+              jsonBody = undefined;
+            }
+          }
+        }
+
+        const result = await proxyIdxRequest({ method: req.method || "GET", path, query, jsonBody });
+        res.statusCode = result.status;
+        res.setHeader("Content-Type", result.contentType);
+        res.end(result.body);
+      });
+    },
+  };
+}
+
+/** Mirrors api/photo.ts locally — see api/_photoProxy.ts for why this exists. */
+function photoDevProxyPlugin(): Plugin {
+  return {
+    name: "photo-dev-proxy",
+    configureServer(server) {
+      server.middlewares.use("/api/photo", async (req, res) => {
+        const query = new URLSearchParams((req.url || "").split("?")[1] || "");
+        const url = query.get("url") || "";
+        const result = await fetchPhoto(url);
+        if (!result.ok) {
+          res.statusCode = result.status;
+          res.end();
+          return;
+        }
+        res.statusCode = 200;
+        res.setHeader("Content-Type", result.contentType);
+        res.end(Buffer.from(result.body));
+      });
+    },
+  };
+}
+
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  // Load .env.local (and friends) into process.env for this config module —
+  // Vite only auto-exposes VITE_-prefixed vars to client code, not to the
+  // config file itself, so IDX_BROKER_ACCESS_KEY needs an explicit loadEnv().
+  const env = loadEnv(mode, process.cwd(), "");
+  for (const [key, value] of Object.entries(env)) {
+    if (process.env[key] === undefined) process.env[key] = value;
+  }
+
+  return {
   define: {
     __BASE_PATH__: JSON.stringify(base),
     __IS_PREVIEW__: JSON.stringify(isPreview),
@@ -19,6 +87,8 @@ export default defineConfig({
   plugins: [
     // ...proxyPlugins,
     react(),
+    idxDevProxyPlugin(),
+    photoDevProxyPlugin(),
     AutoImport({
       imports: [
         {
@@ -83,4 +153,5 @@ export default defineConfig({
     port: 3000,
     host: "0.0.0.0",
   },
+  };
 });
