@@ -18,27 +18,36 @@ function idxDevProxyPlugin(): Plugin {
     name: "idx-dev-proxy",
     configureServer(server) {
       server.middlewares.use("/api/idx", async (req, res) => {
-        const path = (req.url || "").replace(/^\/+/, "").split("?")[0];
-        const query = new URLSearchParams((req.url || "").split("?")[1] || "");
+        try {
+          const path = (req.url || "").replace(/^\/+/, "").split("?")[0];
+          const query = new URLSearchParams((req.url || "").split("?")[1] || "");
 
-        let jsonBody: Record<string, unknown> | undefined;
-        if (req.method !== "GET" && req.method !== "HEAD") {
-          const chunks: Buffer[] = [];
-          for await (const chunk of req) chunks.push(chunk as Buffer);
-          const raw = Buffer.concat(chunks).toString("utf8");
-          if (raw) {
-            try {
-              jsonBody = JSON.parse(raw);
-            } catch {
-              jsonBody = undefined;
+          let jsonBody: Record<string, unknown> | undefined;
+          if (req.method !== "GET" && req.method !== "HEAD") {
+            const chunks: Buffer[] = [];
+            for await (const chunk of req) chunks.push(chunk as Buffer);
+            const raw = Buffer.concat(chunks).toString("utf8");
+            if (raw) {
+              try {
+                jsonBody = JSON.parse(raw);
+              } catch {
+                jsonBody = undefined;
+              }
             }
           }
-        }
 
-        const result = await proxyIdxRequest({ method: req.method || "GET", path, query, jsonBody });
-        res.statusCode = result.status;
-        res.setHeader("Content-Type", result.contentType);
-        res.end(result.body);
+          const result = await proxyIdxRequest({ method: req.method || "GET", path, query, jsonBody });
+          res.statusCode = result.status;
+          res.setHeader("Content-Type", result.contentType);
+          res.end(result.body);
+        } catch (err) {
+          // A network hiccup (e.g. a transient DNS failure) here must not
+          // crash the whole dev server — surface it as a failed request instead.
+          console.error("[idx-dev-proxy]", err);
+          res.statusCode = 502;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: "IDX upstream request failed" }));
+        }
       });
     },
   };
@@ -50,17 +59,23 @@ function photoDevProxyPlugin(): Plugin {
     name: "photo-dev-proxy",
     configureServer(server) {
       server.middlewares.use("/api/photo", async (req, res) => {
-        const query = new URLSearchParams((req.url || "").split("?")[1] || "");
-        const url = query.get("url") || "";
-        const result = await fetchPhoto(url);
-        if (!result.ok) {
-          res.statusCode = result.status;
+        try {
+          const query = new URLSearchParams((req.url || "").split("?")[1] || "");
+          const url = query.get("url") || "";
+          const result = await fetchPhoto(url);
+          if (!result.ok) {
+            res.statusCode = result.status;
+            res.end();
+            return;
+          }
+          res.statusCode = 200;
+          res.setHeader("Content-Type", result.contentType);
+          res.end(Buffer.from(result.body));
+        } catch (err) {
+          console.error("[photo-dev-proxy]", err);
+          res.statusCode = 502;
           res.end();
-          return;
         }
-        res.statusCode = 200;
-        res.setHeader("Content-Type", result.contentType);
-        res.end(Buffer.from(result.body));
       });
     },
   };
