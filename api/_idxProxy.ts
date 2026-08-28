@@ -1,9 +1,13 @@
-// Shared IDX Broker proxy logic — used by both the Vercel serverless function
-// (api/idx/[...path].ts) and the Vite dev-server middleware (vite.config.ts),
-// so local `npm run dev` and the deployed site behave identically.
+// IDX Broker proxy logic for local dev only — imported by the Vite
+// dev-server middleware in vite.config.ts. The deployed Vercel function
+// (api/idx.ts) intentionally does NOT import this: Vercel's function
+// bundler for this non-Next.js project has repeatedly failed to reliably
+// include cross-file imports of underscore-prefixed files, so api/idx.ts
+// keeps its own inlined copy of this same logic instead. Keep the two in
+// sync by hand if this changes.
 //
 // Keeps IDX_BROKER_ACCESS_KEY server-side only: the browser never sees it,
-// it only ever talks to same-origin /api/idx/* routes.
+// it only ever talks to same-origin /api/idx.
 
 const IDX_BASE = "https://api.idxbroker.com";
 

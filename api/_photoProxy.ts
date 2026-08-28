@@ -1,3 +1,7 @@
+// Photo proxy logic for local dev only — imported by the Vite dev-server
+// middleware in vite.config.ts. The deployed Vercel function (api/photo.ts)
+// keeps its own inlined copy instead — see api/_idxProxy.ts for why.
+//
 // Proxies MLS listing photos server-side instead of letting the browser
 // hotlink api.cotality.com directly. That CDN sits behind Incapsula and
 // appears to reject requests unless they carry a referrer IDX Broker's own
