@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { Bookmark, X } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { createSavedSearch } from "@/lib/savedSearches";
 import { createLead, saveLeadSearch } from "@/lib/idx";
 
 const LEAD_ID_KEY = "idx-lead-id";
-const LEAD_EMAIL_KEY = "idx-lead-email";
 
-/** "Save this search" — creates (or reuses, via localStorage) an IDX Broker
- *  lead, then stores the current filter criteria as that lead's saved
- *  search via leads/search/{leadId}. No login system — just enough to
- *  capture intent, matching what the API actually supports. */
+/** "Save this search" — stores the search under the signed-in account
+ *  (Supabase), and best-effort mirrors it into IDX Broker's own lead/CRM
+ *  so Stefanie sees it in her IDX dashboard too. The IDX side never blocks
+ *  success shown to the user. */
 export default function SaveSearchButton({
   searchName,
   criteria,
@@ -16,16 +17,11 @@ export default function SaveSearchButton({
   searchName: string;
   criteria: Record<string, string>;
 }) {
+  const { user, requireAuth } = useAuth();
   const [open, setOpen] = useState(false);
-  const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
+  const [name, setName] = useState(searchName);
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const savedEmail = localStorage.getItem(LEAD_EMAIL_KEY);
-    if (savedEmail) setEmail(savedEmail);
-  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -36,35 +32,50 @@ export default function SaveSearchButton({
     return () => document.removeEventListener("mousedown", onClick);
   }, [open]);
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.includes("@")) return;
-    setStatus("saving");
+  const openPopover = () => {
+    if (!user) {
+      requireAuth("Sign in to save this search and get notified of new matches.");
+      return;
+    }
+    setName(searchName);
+    setStatus("idle");
+    setOpen(true);
+  };
+
+  const mirrorToIdx = async () => {
+    if (!user?.email) return;
     try {
       let leadId = localStorage.getItem(LEAD_ID_KEY);
       if (!leadId) {
-        const [firstName, ...rest] = name.trim().split(" ");
+        const fullName = (user.user_metadata?.full_name as string | undefined) || "";
+        const [firstName, ...rest] = fullName.trim().split(" ");
         leadId = await createLead({
           firstName: firstName || "Search",
           lastName: rest.join(" ") || "Alert",
-          email,
+          email: user.email,
+          phone: (user.user_metadata?.phone as string | undefined) || undefined,
         });
         if (leadId) localStorage.setItem(LEAD_ID_KEY, leadId);
       }
-      if (!leadId) throw new Error("Could not create lead");
-      localStorage.setItem(LEAD_EMAIL_KEY, email);
-
-      const ok = await saveLeadSearch(leadId, { searchName, search: criteria });
-      setStatus(ok ? "saved" : "error");
+      if (leadId) await saveLeadSearch(leadId, { searchName: name, search: criteria });
     } catch {
-      setStatus("error");
+      /* best-effort only — the Supabase save is the source of truth for the user */
     }
+  };
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    setStatus("saving");
+    const ok = await createSavedSearch(user.id, name.trim() || searchName, criteria);
+    setStatus(ok ? "saved" : "error");
+    if (ok) mirrorToIdx();
   };
 
   return (
     <div className="relative" ref={ref}>
       <button
-        onClick={() => setOpen((o) => !o)}
+        onClick={openPopover}
         className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium text-foreground-700 border border-background-300 rounded-full hover:border-foreground-400 transition-colors whitespace-nowrap"
       >
         <Bookmark className="w-3.5 h-3.5" strokeWidth={1.5} />
@@ -96,17 +107,10 @@ export default function SaveSearchButton({
             <form onSubmit={submit} className="flex flex-col gap-2.5">
               <input
                 type="text"
+                required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Your name"
-                className="w-full px-3 py-2 bg-background-100 border border-background-300 rounded-md text-sm text-foreground-950 placeholder:text-foreground-400 focus:outline-none focus:border-primary-400"
-              />
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@email.com"
+                placeholder="Name this search"
                 className="w-full px-3 py-2 bg-background-100 border border-background-300 rounded-md text-sm text-foreground-950 placeholder:text-foreground-400 focus:outline-none focus:border-primary-400"
               />
               <button

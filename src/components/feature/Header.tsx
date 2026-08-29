@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/hooks/useAuth";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -15,6 +16,7 @@ const navLinks = [
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user, requireAuth, signOut } = useAuth();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
@@ -79,14 +81,37 @@ export default function Header() {
 
             {/* Desktop CTA */}
             <div className="hidden lg:flex items-center gap-5">
-              <a
-                href="/account"
-                className={`text-sm font-medium tracking-wide uppercase transition-colors duration-300 whitespace-nowrap ${
-                  scrolled ? "text-foreground-700 hover:text-foreground-950" : "text-white/80 hover:text-white"
-                }`}
-              >
-                Sign In
-              </a>
+              {user ? (
+                <div className="flex items-center gap-4">
+                  <a
+                    href="/account"
+                    className={`text-sm font-medium tracking-wide uppercase transition-colors duration-300 whitespace-nowrap ${
+                      scrolled ? "text-foreground-700 hover:text-foreground-950" : "text-white/80 hover:text-white"
+                    }`}
+                  >
+                    My Account
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => signOut()}
+                    className={`text-sm font-medium tracking-wide uppercase transition-colors duration-300 whitespace-nowrap ${
+                      scrolled ? "text-foreground-700 hover:text-foreground-950" : "text-white/80 hover:text-white"
+                    }`}
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => requireAuth()}
+                  className={`text-sm font-medium tracking-wide uppercase transition-colors duration-300 whitespace-nowrap ${
+                    scrolled ? "text-foreground-700 hover:text-foreground-950" : "text-white/80 hover:text-white"
+                  }`}
+                >
+                  Sign In
+                </button>
+              )}
               <a
                 href="/contact"
                 className={`px-5 py-2.5 text-sm font-medium tracking-wide uppercase rounded-md transition-all duration-300 whitespace-nowrap ${
@@ -151,16 +176,29 @@ export default function Header() {
                   {link.label}
                 </motion.a>
               ))}
-              <motion.a
-                href="/account"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: navLinks.length * 0.08, duration: 0.4 }}
-                onClick={() => setMobileOpen(false)}
-                className="text-lg font-medium text-foreground-700 hover:text-primary-600 transition-colors"
-              >
-                Sign In
-              </motion.a>
+              {user ? (
+                <motion.a
+                  href="/account"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: navLinks.length * 0.08, duration: 0.4 }}
+                  onClick={() => setMobileOpen(false)}
+                  className="text-lg font-medium text-foreground-700 hover:text-primary-600 transition-colors"
+                >
+                  My Account
+                </motion.a>
+              ) : (
+                <motion.button
+                  type="button"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: navLinks.length * 0.08, duration: 0.4 }}
+                  onClick={() => { setMobileOpen(false); requireAuth(); }}
+                  className="text-lg font-medium text-foreground-700 hover:text-primary-600 transition-colors"
+                >
+                  Sign In
+                </motion.button>
+              )}
               <motion.a
                 href="/contact"
                 initial={{ opacity: 0, y: 20 }}

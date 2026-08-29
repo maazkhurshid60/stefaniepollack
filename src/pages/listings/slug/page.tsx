@@ -5,6 +5,8 @@ import { Heart, Share2, BedDouble, Bath, Ruler, ArrowLeft, ChevronLeft, ChevronR
 import { useIdxListings } from "@/hooks/useIdxListings";
 import type { AvailableProperty, SoldProperty } from "@/lib/idx";
 import { PHOTO_FALLBACK } from "@/lib/media";
+import { useAuth } from "@/hooks/useAuth";
+import { listFavoriteMlsIds, addFavorite, removeFavorite } from "@/lib/favorites";
 import NotFound from "../../NotFound";
 
 type PropertyMatch = { property: AvailableProperty | SoldProperty; isSold: boolean };
@@ -15,14 +17,11 @@ export default function PropertyDetail() {
   const [shareLabel, setShareLabel] = useState("Share");
   const [activeIndex, setActiveIndex] = useState(0);
   const { data, loading } = useIdxListings();
+  const { user, requireAuth } = useAuth();
 
   useEffect(() => {
     setActiveIndex(0);
   }, [slug]);
-
-  if (loading) {
-    return <div className="w-full py-32 text-center text-sm text-foreground-500">Loading…</div>;
-  }
 
   const match: PropertyMatch | null = data
     ? (() => {
@@ -33,6 +32,19 @@ export default function PropertyDetail() {
         return null;
       })()
     : null;
+  const matchMlsId = match?.property.listingID;
+
+  useEffect(() => {
+    if (!user || !matchMlsId) {
+      setSaved(false);
+      return;
+    }
+    listFavoriteMlsIds(user.id).then((ids) => setSaved(ids.has(matchMlsId)));
+  }, [user, matchMlsId]);
+
+  if (loading) {
+    return <div className="w-full py-32 text-center text-sm text-foreground-500">Loading…</div>;
+  }
 
   if (!match) return <NotFound />;
   const { property, isSold } = match;
@@ -162,7 +174,20 @@ export default function PropertyDetail() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mt-8">
             <div className="flex items-center gap-5">
               <button
-                onClick={() => setSaved((s) => !s)}
+                onClick={() => {
+                  if (!user) {
+                    requireAuth("Sign in to save this home to your favorites.");
+                    return;
+                  }
+                  const on = !saved;
+                  setSaved(on);
+                  const persist = on
+                    ? addFavorite(user.id, property.listingID)
+                    : removeFavorite(user.id, property.listingID);
+                  persist.then((ok) => {
+                    if (!ok) setSaved(!on);
+                  });
+                }}
                 className="flex items-center gap-2 text-sm text-foreground-700 hover:text-primary-700 transition-colors"
               >
                 <Heart

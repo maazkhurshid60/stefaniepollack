@@ -7,7 +7,7 @@ import { PHOTO_FALLBACK } from "@/lib/media";
 import PropertyMap from "./PropertyMap";
 import SaveSearchButton from "./SaveSearchButton";
 
-type ListedProperty = AvailableProperty | SoldProperty;
+export type ListedProperty = AvailableProperty | SoldProperty;
 
 function numericPrice(property: ListedProperty, isSold: boolean) {
   const raw = isSold ? (property as SoldProperty).soldPrice : (property as AvailableProperty).price;
@@ -93,7 +93,7 @@ function DropdownOption({ label, selected, onClick }: { label: string; selected:
   );
 }
 
-function PropertyCard({ property, isSold }: { property: ListedProperty; isSold: boolean }) {
+export function PropertyCard({ property, isSold }: { property: ListedProperty; isSold: boolean }) {
   const price = isSold ? (property as SoldProperty).soldPrice : (property as AvailableProperty).price;
   return (
     <motion.a
