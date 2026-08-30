@@ -323,8 +323,9 @@ export default function PropertyGrid() {
               )}
             </FilterDropdown>
 
-            {/* List / Map — meaningful on small screens where the two can't sit
-                side by side; on desktop both panels already show together. */}
+            {/* List / Map — on mobile these are mutually exclusive full-width
+                views; on desktop, List keeps the default split view and Map
+                expands to a full-width focused map. */}
             <div className="inline-flex p-1 bg-background-200 rounded-full lg:ml-auto">
               <button
                 onClick={() => setMobileView("list")}
@@ -403,7 +404,7 @@ export default function PropertyGrid() {
 
           {/* List + Map, side by side on desktop like a real search page */}
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-10">
-            <div className={`lg:col-span-3 ${mobileView === "map" ? "hidden lg:block" : ""}`}>
+            <div className={`lg:col-span-3 ${mobileView === "map" ? "hidden" : ""}`}>
               {loading ? (
                 <p className="py-20 text-center text-sm text-foreground-500">Loading listings…</p>
               ) : properties.length > 0 ? (
@@ -429,7 +430,7 @@ export default function PropertyGrid() {
               )}
             </div>
 
-            <div className={`lg:col-span-2 ${mobileView === "list" ? "hidden lg:block" : ""}`}>
+            <div className={mobileView === "map" ? "lg:col-span-5" : `lg:col-span-2 ${mobileView === "list" ? "hidden lg:block" : ""}`}>
               <div className="lg:sticky lg:top-28">
                 <PropertyMap tab={activeTab} properties={properties} />
               </div>

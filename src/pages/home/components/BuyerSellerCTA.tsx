@@ -33,7 +33,7 @@ const cards: {
     description:
       "From market analysis to personalized strategy, every step of your journey starts with a conversation.",
     cta: "Book a Meeting",
-    href: "/schedule-a-meeting",
+    href: "/contact",
     variant: "outline",
   },
 ];
