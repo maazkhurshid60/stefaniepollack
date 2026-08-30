@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BedDouble, Bath, Ruler, Search, LayoutGrid, Map as MapIcon, ChevronDown } from "lucide-react";
+import { BedDouble, Bath, Ruler, Search, LayoutGrid, Map as MapIcon, ChevronDown, Heart } from "lucide-react";
 import { useIdxListings } from "@/hooks/useIdxListings";
 import { fetchSystemLinks, type AvailableProperty, type SoldProperty } from "@/lib/idx";
 import { PHOTO_FALLBACK } from "@/lib/media";
+import { useAuth } from "@/hooks/useAuth";
+import { addFavorite, removeFavorite } from "@/lib/favorites";
 import PropertyMap from "./PropertyMap";
 import SaveSearchButton from "./SaveSearchButton";
 
@@ -93,8 +95,40 @@ function DropdownOption({ label, selected, onClick }: { label: string; selected:
   );
 }
 
-export function PropertyCard({ property, isSold }: { property: ListedProperty; isSold: boolean }) {
+export function PropertyCard({
+  property,
+  isSold,
+  showSave = false,
+  initialSaved = false,
+  onToggleSaved,
+}: {
+  property: ListedProperty;
+  isSold: boolean;
+  /** Shows a heart/unsave control — used on the account page's Favorites tab. */
+  showSave?: boolean;
+  initialSaved?: boolean;
+  onToggleSaved?: (mlsId: string, saved: boolean) => void;
+}) {
   const price = isSold ? (property as SoldProperty).soldPrice : (property as AvailableProperty).price;
+  const { user, requireAuth } = useAuth();
+  const [saved, setSaved] = useState(initialSaved);
+
+  const toggleSave = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user) {
+      requireAuth("Sign in to save this home to your favorites.");
+      return;
+    }
+    const next = !saved;
+    setSaved(next);
+    const persist = next ? addFavorite(user.id, property.listingID) : removeFavorite(user.id, property.listingID);
+    persist.then((ok) => {
+      if (ok) onToggleSaved?.(property.listingID, next);
+      else setSaved(!next);
+    });
+  };
+
   return (
     <motion.a
       href={`/listings/${property.slug}`}
@@ -116,6 +150,17 @@ export function PropertyCard({ property, isSold }: { property: ListedProperty; i
           <div className="absolute top-3 left-3 px-3 py-1.5 bg-foreground-950/90 text-background-50 text-[10px] font-semibold tracking-[0.2em] uppercase rounded-full">
             Sold
           </div>
+        )}
+        {showSave && (
+          <button
+            type="button"
+            onClick={toggleSave}
+            aria-label={saved ? "Remove from saved" : `Save ${property.address}`}
+            aria-pressed={saved}
+            className="absolute top-3 right-3 w-9 h-9 flex items-center justify-center rounded-full bg-background-50/90 backdrop-blur-sm text-foreground-700 hover:text-primary-600 transition-colors shadow-md"
+          >
+            <Heart className={`w-4 h-4 ${saved ? "fill-primary-600 text-primary-600" : ""}`} strokeWidth={1.5} />
+          </button>
         )}
       </div>
       <p className="text-[11px] font-medium tracking-[0.2em] uppercase text-foreground-500 mb-2">

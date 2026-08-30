@@ -62,7 +62,7 @@ export default function PropertyMap({
   return (
     <div className="w-full">
       <div className="relative rounded-xl overflow-hidden border border-background-200 h-[420px] lg:h-[760px]">
-        <MapContainer center={center} zoom={11} scrollWheelZoom={false} className="w-full h-full">
+        <MapContainer center={center} zoom={11} scrollWheelZoom className="w-full h-full">
           <TileLayer key={mapType} attribution={TILE_SOURCES[mapType].attribution} url={TILE_SOURCES[mapType].url} />
           {properties.map((property) => {
             const price = priceLabel(property, isSold);
