@@ -33,11 +33,15 @@ type RawIdxListing = {
   zipcode: string;
   bedrooms: number;
   totalBaths: number;
+  fullBaths?: number;
+  halfBaths?: number;
   sqFt: string;
+  acres?: string;
   price: number;
   listingPrice: string;
   soldPrice?: number | string;
   soldDate?: string;
+  dateAdded?: string;
   latitude: string | number;
   longitude: string | number;
   image?: Record<string, IdxImage>;
@@ -46,9 +50,16 @@ type RawIdxListing = {
   detailsUrlSlug: string;
   idxStatus?: string;
   propStatus?: string;
+  propType?: string;
+  propSubType?: string;
+  countyName?: string;
+  advanced?: Record<string, unknown>;
 };
 
 type RawIdxListResponse = { total: number; data: Record<string, RawIdxListing> };
+
+export type Feature = { label: string; value: string };
+export type HistoryItem = { event: string; sub: string; price?: string };
 
 type BaseProperty = {
   id: string;
@@ -67,6 +78,10 @@ type BaseProperty = {
   lng: number;
   remarks: string;
   yearBuilt: number | null;
+  propType: string;
+  perSqft: string;
+  features: { interior: Feature[]; exterior: Feature[]; details: Feature[] };
+  history: HistoryItem[];
 };
 
 export type AvailableProperty = BaseProperty & { price: string; status: "available" };
@@ -102,8 +117,96 @@ function monthYear(iso: string | undefined): string {
   return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
 }
 
-function baseFields(listing: RawIdxListing): BaseProperty {
+function monthDayYear(iso: string | undefined): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function yn(v: unknown): string {
+  return v === "yes" || v === "y" ? "Yes" : v === "no" || v === "n" ? "No" : "—";
+}
+function joinArr(v: unknown): string {
+  return Array.isArray(v) && v.length ? v.filter((x) => x && x !== "None").join(", ") : "—";
+}
+
+/** Simplifies IDX's propType/propSubType into coarse categories. */
+function simpleType(listing: RawIdxListing): string {
+  const sub = (listing.propSubType || "").toLowerCase();
+  if (sub.includes("land") || sub.includes("lot")) return "Land";
+  if (sub.includes("condo")) return "Condo";
+  if (sub.includes("townhouse") || sub.includes("town house")) return "Townhouse";
+  if (sub.includes("multi") || sub.includes("duplex") || sub.includes("triplex")) return "Multi-Family";
+  return "House";
+}
+
+/** Interior/Exterior/Details feature rows from IDX's `advanced` field bag,
+ *  plus a short history synthesized from dateAdded/soldDate/yearBuilt (IDX
+ *  has no dedicated price-history endpoint). */
+function buildFeaturesHistory(
+  listing: RawIdxListing,
+  sold: boolean,
+  price: number,
+  sqftNum: number
+): { features: BaseProperty["features"]; history: HistoryItem[]; perSqft: string } {
+  const adv = listing.advanced || {};
+  const perSqft = sqftNum ? `${money(Math.round(price / sqftNum))} / sqft` : "";
+
+  const interior: Feature[] = [
+    { label: "Total Stories", value: String(adv.storiesTotal ?? "—") },
+    { label: "Bedrooms", value: String(listing.bedrooms ?? "—") },
+    { label: "Total Bathrooms", value: String(listing.totalBaths ?? "—") },
+    { label: "Full Bathrooms", value: String(listing.fullBaths ?? "—") },
+    { label: "Half Bathrooms", value: String(listing.halfBaths ?? "—") },
+    { label: "Appliances", value: joinArr(adv.appliances) },
+    { label: "Laundry Description", value: joinArr(adv.laundryFeatures) },
+    { label: "Floor Description", value: joinArr(adv.flooring) },
+    { label: "Fireplace", value: yn(adv.fireplaceYN) },
+    { label: "Cooling", value: yn(adv.coolingYN) },
+    { label: "Heating", value: yn(adv.heatingYN) },
+  ];
+
+  const exterior: Feature[] = [
+    { label: "Lot Size", value: typeof adv.lotSizeSquareFeet === "number" ? `${adv.lotSizeSquareFeet.toLocaleString()} sqft` : listing.acres ? `${listing.acres} Acres` : "—" },
+    { label: "Pool", value: yn(adv.poolPrivateYN) },
+    { label: "Spa", value: yn(adv.spaYN) },
+    { label: "Parking Spaces", value: String(adv.parkingTotal ?? "—") },
+    { label: "Parking Description", value: joinArr(adv.parkingFeatures) },
+    { label: "Architecture", value: joinArr(adv.architecturalStyle) },
+    { label: "View", value: yn(adv.viewYN) === "Yes" ? joinArr(adv.view) : "No" },
+  ];
+
+  const details: Feature[] = [
+    { label: "Property Type", value: `${listing.propType || "Residential"}${listing.propSubType ? ` — ${listing.propSubType}` : ""}` },
+    { label: "Year Built", value: String(listing.yearBuilt ?? "—") },
+    { label: "MLS #", value: listing.listingID },
+    { label: "County", value: listing.countyName || "—" },
+    { label: "Price / SqFt", value: perSqft || "—" },
+  ];
+
+  const history: HistoryItem[] = [];
+  if (sold && listing.soldDate) {
+    history.push({
+      event: "Sold",
+      sub: `${monthDayYear(listing.soldDate)} · Pollack & Associates`,
+      price: listing.soldPrice != null ? money(Number(listing.soldPrice)) : undefined,
+    });
+  }
+  if (listing.dateAdded) {
+    history.push({ event: "Listed for sale", sub: `${monthDayYear(listing.dateAdded)} · MLS ${listing.idxID}`, price: listing.listingPrice });
+  }
+  if (listing.yearBuilt) {
+    history.push({ event: "Built", sub: `${listing.yearBuilt}` });
+  }
+
+  return { features: { interior, exterior, details }, history, perSqft };
+}
+
+function baseFields(listing: RawIdxListing, sold: boolean, price: number): BaseProperty {
   const photos = gallery(listing);
+  const sqftNum = listing.sqFt ? Number(listing.sqFt.replace(/[^0-9.]/g, "")) : 0;
+  const { features, history, perSqft } = buildFeaturesHistory(listing, sold, price, sqftNum);
   return {
     id: `${listing.idxID}!${listing.listingID}`,
     idxID: listing.idxID,
@@ -121,22 +224,27 @@ function baseFields(listing: RawIdxListing): BaseProperty {
     lng: Number(listing.longitude),
     remarks: listing.remarksConcat || "",
     yearBuilt: listing.yearBuilt ?? null,
+    propType: simpleType(listing),
+    perSqft,
+    features,
+    history,
   };
 }
 
 function mapAvailable(listing: RawIdxListing): AvailableProperty {
-  return { ...baseFields(listing), price: listing.listingPrice, status: "available" };
+  return { ...baseFields(listing, false, listing.price), price: listing.listingPrice, status: "available" };
 }
 
 function mapSold(listing: RawIdxListing): SoldProperty {
   // soldPrice comes back as a raw number (unlike listingPrice, which the API
   // already formats as a string) — format it the same way.
+  const soldPriceNum = typeof listing.soldPrice === "number" ? listing.soldPrice : listing.price;
   const soldPrice =
     typeof listing.soldPrice === "number"
       ? money(listing.soldPrice)
       : listing.soldPrice || listing.listingPrice;
   return {
-    ...baseFields(listing),
+    ...baseFields(listing, true, soldPriceNum),
     soldPrice,
     dateSold: monthYear(listing.soldDate),
   };
