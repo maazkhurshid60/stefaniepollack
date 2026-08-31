@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BedDouble, Bath, Ruler, Search, LayoutGrid, Map as MapIcon, ChevronDown, Heart, User, LogOut, Bookmark } from "lucide-react";
+import { BedDouble, Bath, Ruler, Search, LayoutGrid, Map as MapIcon, ChevronDown, Heart, User, LogOut, Bookmark, X } from "lucide-react";
 import { useIdxListings } from "@/hooks/useIdxListings";
 import type { AvailableProperty, SoldProperty } from "@/lib/idx";
 import { PHOTO_FALLBACK } from "@/lib/media";
@@ -99,76 +99,99 @@ function DropdownOption({ label, selected, onClick }: { label: string; selected:
 function AccountMenu() {
   const { user, requireAuth, signOut } = useAuth();
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) return;
-    const onClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
     };
-    document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
   }, [open]);
 
-  if (!user) {
-    return (
+  return (
+    <>
       <button
         type="button"
-        onClick={() => requireAuth()}
-        aria-label="Sign in"
+        onClick={() => setOpen(true)}
+        aria-label="Account"
+        aria-haspopup="dialog"
+        aria-expanded={open}
         className="w-10 h-10 flex items-center justify-center rounded-full border border-background-300 text-foreground-700 hover:border-foreground-400 transition-colors"
       >
         <User className="w-4 h-4" strokeWidth={1.5} />
       </button>
-    );
-  }
 
-  return (
-    <div className="relative" ref={ref}>
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        aria-label="Account menu"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        className={`w-10 h-10 flex items-center justify-center rounded-full border transition-colors ${
-          open ? "border-primary-500 text-primary-700 bg-primary-50" : "border-background-300 text-foreground-700 hover:border-foreground-400"
-        }`}
-      >
-        <User className="w-4 h-4" strokeWidth={1.5} />
-      </button>
       <AnimatePresence>
         {open && (
-          <motion.div
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.15 }}
-            role="menu"
-            className="absolute right-0 top-full mt-2 z-30 w-52 bg-background-50 border border-background-300 rounded-xl shadow-lg p-2"
-          >
-            <a
-              href="/account"
-              role="menuitem"
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="fixed inset-0 z-[110] bg-foreground-950/50 backdrop-blur-sm"
               onClick={() => setOpen(false)}
-              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-foreground-700 hover:bg-background-200 transition-colors"
+            />
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              role="dialog"
+              aria-label="Account"
+              className="fixed right-0 top-0 z-[111] h-full w-[min(360px,100%)] bg-background-50 shadow-xl flex flex-col"
             >
-              <Bookmark className="w-3.5 h-3.5" strokeWidth={1.5} />
-              My Search Portal
-            </a>
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() => { setOpen(false); signOut(); }}
-              className="flex items-center gap-2.5 w-full text-left px-3 py-2.5 rounded-lg text-sm text-foreground-700 hover:bg-background-200 transition-colors"
-            >
-              <LogOut className="w-3.5 h-3.5" strokeWidth={1.5} />
-              Sign Out
-            </button>
-          </motion.div>
+              <div className="flex items-center justify-between px-6 py-6 border-b border-background-200">
+                <h2 className="font-heading text-xl text-foreground-950">My Account</h2>
+                <button onClick={() => setOpen(false)} aria-label="Close" className="text-foreground-400 hover:text-foreground-950 transition-colors">
+                  <X className="w-5 h-5" strokeWidth={1.5} />
+                </button>
+              </div>
+
+              <div className="flex-1 p-6">
+                {user ? (
+                  <div className="flex flex-col gap-2">
+                    <p className="text-sm text-foreground-500 mb-4 break-words">Signed in as <b className="text-foreground-950">{user.email}</b></p>
+                    <a
+                      href="/account"
+                      onClick={() => setOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3.5 rounded-lg text-sm font-medium text-foreground-800 hover:bg-background-200 transition-colors"
+                    >
+                      <Bookmark className="w-4 h-4" strokeWidth={1.5} />
+                      My Search Portal
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => { setOpen(false); signOut(); }}
+                      className="flex items-center gap-3 px-4 py-3.5 rounded-lg text-sm font-medium text-foreground-800 hover:bg-background-200 transition-colors text-left"
+                    >
+                      <LogOut className="w-4 h-4" strokeWidth={1.5} />
+                      Sign Out
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center text-center pt-10">
+                    <div className="w-12 h-12 rounded-full bg-primary-100/70 text-primary-700 flex items-center justify-center mb-5">
+                      <User className="w-5 h-5" strokeWidth={1.5} />
+                    </div>
+                    <p className="text-sm text-foreground-600 mb-6">
+                      Sign in to save homes and searches, and pick up where you left off.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => { setOpen(false); requireAuth(); }}
+                      className="w-full px-6 py-3 bg-foreground-950 text-background-50 text-sm font-medium tracking-wide uppercase rounded-md hover:bg-foreground-800 transition-colors"
+                    >
+                      Sign In / Register
+                    </button>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
-    </div>
+    </>
   );
 }
 
