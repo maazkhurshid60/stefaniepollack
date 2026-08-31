@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -17,12 +18,17 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, requireAuth, signOut } = useAuth();
+  const { pathname } = useLocation();
+  // Inner pages have no dark hero behind the header — keep it solid & legible
+  // from the moment they load, not just after scrolling past 60px.
+  const solid = scrolled || pathname !== "/";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
     window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  }, [pathname]);
 
   useEffect(() => {
     if (mobileOpen) {
@@ -39,7 +45,7 @@ export default function Header() {
     <>
       <header
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-          scrolled
+          solid
             ? "bg-background-50/95 backdrop-blur-md border-b border-background-200/50"
             : "bg-transparent"
         }`}
@@ -52,7 +58,7 @@ export default function Header() {
                 src="https://storage.helloreaddy.io/project_files/ea13b1fb-fd83-432d-a9dd-911da517d8bf/e98c7909-df05-4785-9269-6c3c1bf310c3_compressed_Pollack-logo.webp"
                 alt="Pollack Homes"
                 className={`h-10 md:h-12 w-auto transition-all duration-500 ${
-                  scrolled ? "brightness-0" : ""
+                  solid ? "brightness-0" : ""
                 }`}
               />
             </a>
@@ -64,7 +70,7 @@ export default function Header() {
                   key={link.label}
                   href={link.href}
                   className={`relative text-sm font-medium tracking-wide uppercase transition-colors duration-300 group whitespace-nowrap ${
-                    scrolled
+                    solid
                       ? "text-foreground-800 hover:text-foreground-950"
                       : "text-white/90 hover:text-white"
                   }`}
@@ -72,7 +78,7 @@ export default function Header() {
                   {link.label}
                   <span
                     className={`absolute -bottom-1 left-0 h-px w-0 group-hover:w-full transition-all duration-300 ${
-                      scrolled ? "bg-foreground-950" : "bg-white"
+                      solid ? "bg-foreground-950" : "bg-white"
                     }`}
                   />
                 </a>
@@ -86,7 +92,7 @@ export default function Header() {
                   <a
                     href="/account"
                     className={`text-sm font-medium tracking-wide uppercase transition-colors duration-300 whitespace-nowrap ${
-                      scrolled ? "text-foreground-700 hover:text-foreground-950" : "text-white/80 hover:text-white"
+                      solid ? "text-foreground-700 hover:text-foreground-950" : "text-white/80 hover:text-white"
                     }`}
                   >
                     My Account
@@ -95,7 +101,7 @@ export default function Header() {
                     type="button"
                     onClick={() => signOut()}
                     className={`text-sm font-medium tracking-wide uppercase transition-colors duration-300 whitespace-nowrap ${
-                      scrolled ? "text-foreground-700 hover:text-foreground-950" : "text-white/80 hover:text-white"
+                      solid ? "text-foreground-700 hover:text-foreground-950" : "text-white/80 hover:text-white"
                     }`}
                   >
                     Sign Out
@@ -106,7 +112,7 @@ export default function Header() {
                   type="button"
                   onClick={() => requireAuth()}
                   className={`text-sm font-medium tracking-wide uppercase transition-colors duration-300 whitespace-nowrap ${
-                    scrolled ? "text-foreground-700 hover:text-foreground-950" : "text-white/80 hover:text-white"
+                    solid ? "text-foreground-700 hover:text-foreground-950" : "text-white/80 hover:text-white"
                   }`}
                 >
                   Sign In
@@ -115,7 +121,7 @@ export default function Header() {
               <a
                 href="/contact"
                 className={`px-5 py-2.5 text-sm font-medium tracking-wide uppercase rounded-md transition-all duration-300 whitespace-nowrap ${
-                  scrolled
+                  solid
                     ? "bg-foreground-950 text-background-50 hover:bg-foreground-800"
                     : "bg-white/10 text-white border border-white/30 hover:bg-white hover:text-foreground-950 backdrop-blur-sm"
                 }`}
@@ -128,24 +134,24 @@ export default function Header() {
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
               className={`lg:hidden w-10 h-10 flex flex-col items-center justify-center gap-1.5 transition-colors ${
-                scrolled ? "text-foreground-950" : "text-white"
+                solid ? "text-foreground-950" : "text-white"
               }`}
               aria-label="Toggle menu"
             >
               <span
                 className={`block h-px w-6 transition-all duration-300 ${
                   mobileOpen ? "rotate-45 translate-y-[3.5px]" : ""
-                } ${scrolled ? "bg-foreground-950" : "bg-white"}`}
+                } ${solid ? "bg-foreground-950" : "bg-white"}`}
               />
               <span
                 className={`block h-px w-6 transition-all duration-300 ${
                   mobileOpen ? "opacity-0" : ""
-                } ${scrolled ? "bg-foreground-950" : "bg-white"}`}
+                } ${solid ? "bg-foreground-950" : "bg-white"}`}
               />
               <span
                 className={`block h-px w-6 transition-all duration-300 ${
                   mobileOpen ? "-rotate-45 -translate-y-[3.5px]" : ""
-                } ${scrolled ? "bg-foreground-950" : "bg-white"}`}
+                } ${solid ? "bg-foreground-950" : "bg-white"}`}
               />
             </button>
           </div>
