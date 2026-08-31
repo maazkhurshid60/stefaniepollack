@@ -76,6 +76,7 @@ export default function AuthModal() {
             className="fixed inset-0 z-[100] bg-foreground-950/50 backdrop-blur-sm"
             onClick={close}
           />
+          <div className="fixed inset-0 z-[101] flex items-center justify-center p-4 pointer-events-none">
           <motion.div
             initial={{ opacity: 0, y: 16, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -83,7 +84,7 @@ export default function AuthModal() {
             transition={{ duration: 0.25 }}
             role="dialog"
             aria-label="Sign in"
-            className="fixed z-[101] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(420px,calc(100%-32px))] bg-background-50 rounded-2xl border border-background-200/60 shadow-xl p-7"
+            className="pointer-events-auto w-[min(420px,100%)] bg-background-50 rounded-2xl border border-background-200/60 shadow-xl p-7"
           >
             <div className="flex items-center justify-between">
               <h2 className="font-heading text-xl text-foreground-950">
@@ -177,6 +178,7 @@ export default function AuthModal() {
               </>
             )}
           </motion.div>
+          </div>
         </>
       )}
     </AnimatePresence>
