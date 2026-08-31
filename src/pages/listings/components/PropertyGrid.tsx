@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BedDouble, Bath, Ruler, Search, LayoutGrid, Map as MapIcon, ChevronDown, Heart } from "lucide-react";
+import { BedDouble, Bath, Ruler, Search, LayoutGrid, Map as MapIcon, ChevronDown, Heart, User, LogOut, Bookmark } from "lucide-react";
 import { useIdxListings } from "@/hooks/useIdxListings";
-import { fetchSystemLinks, type AvailableProperty, type SoldProperty } from "@/lib/idx";
+import type { AvailableProperty, SoldProperty } from "@/lib/idx";
 import { PHOTO_FALLBACK } from "@/lib/media";
 import { useAuth } from "@/hooks/useAuth";
-import { addFavorite, removeFavorite } from "@/lib/favorites";
+import { addFavorite, removeFavorite, listFavoriteMlsIds } from "@/lib/favorites";
 import PropertyMap from "./PropertyMap";
 import SaveSearchButton from "./SaveSearchButton";
 
@@ -24,6 +24,7 @@ const PRICE_OPTIONS = [
   { label: "$4M+", min: 4_000_000, max: Infinity },
 ];
 const BED_BATH_OPTIONS = [0, 2, 3, 4, 5];
+const TYPE_OPTIONS = ["Any type", "House", "Condo", "Townhouse", "Multi-Family", "Land"];
 const SORT_OPTIONS = [
   { value: "newest", label: "Newest" },
   { value: "price-desc", label: "Price (high to low)" },
@@ -95,6 +96,82 @@ function DropdownOption({ label, selected, onClick }: { label: string; selected:
   );
 }
 
+function AccountMenu() {
+  const { user, requireAuth, signOut } = useAuth();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [open]);
+
+  if (!user) {
+    return (
+      <button
+        type="button"
+        onClick={() => requireAuth()}
+        aria-label="Sign in"
+        className="w-10 h-10 flex items-center justify-center rounded-full border border-background-300 text-foreground-700 hover:border-foreground-400 transition-colors"
+      >
+        <User className="w-4 h-4" strokeWidth={1.5} />
+      </button>
+    );
+  }
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-label="Account menu"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className={`w-10 h-10 flex items-center justify-center rounded-full border transition-colors ${
+          open ? "border-primary-500 text-primary-700 bg-primary-50" : "border-background-300 text-foreground-700 hover:border-foreground-400"
+        }`}
+      >
+        <User className="w-4 h-4" strokeWidth={1.5} />
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.15 }}
+            role="menu"
+            className="absolute right-0 top-full mt-2 z-30 w-52 bg-background-50 border border-background-300 rounded-xl shadow-lg p-2"
+          >
+            <a
+              href="/account"
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-foreground-700 hover:bg-background-200 transition-colors"
+            >
+              <Bookmark className="w-3.5 h-3.5" strokeWidth={1.5} />
+              My Search Portal
+            </a>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => { setOpen(false); signOut(); }}
+              className="flex items-center gap-2.5 w-full text-left px-3 py-2.5 rounded-lg text-sm text-foreground-700 hover:bg-background-200 transition-colors"
+            >
+              <LogOut className="w-3.5 h-3.5" strokeWidth={1.5} />
+              Sign Out
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export function PropertyCard({
   property,
   isSold,
@@ -112,6 +189,7 @@ export function PropertyCard({
   const price = isSold ? (property as SoldProperty).soldPrice : (property as AvailableProperty).price;
   const { user, requireAuth } = useAuth();
   const [saved, setSaved] = useState(initialSaved);
+  useEffect(() => setSaved(initialSaved), [initialSaved]);
 
   const toggleSave = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -195,21 +273,20 @@ export default function PropertyGrid() {
   const [priceIdx, setPriceIdx] = useState(0);
   const [minBeds, setMinBeds] = useState(0);
   const [minBaths, setMinBaths] = useState(0);
+  const [typeIdx, setTypeIdx] = useState(0);
   const [sort, setSort] = useState(SORT_OPTIONS[0].value);
-  const [fullSearchUrl, setFullSearchUrl] = useState<string | null>(null);
 
   const { data, loading } = useIdxListings();
+  const { user } = useAuth();
+  const [savedMls, setSavedMls] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    fetchSystemLinks()
-      .then((links) => {
-        const pick = links.find((l) => l.name === "Map Search") || links.find((l) => l.category === "search");
-        if (pick) setFullSearchUrl(pick.url);
-      })
-      .catch(() => {
-        // full-MLS-search link is a nice-to-have — silently skip if it fails
-      });
-  }, []);
+    if (!user) {
+      setSavedMls(new Set());
+      return;
+    }
+    listFavoriteMlsIds(user.id).then(setSavedMls);
+  }, [user]);
 
   const isSold = activeTab === "sold";
 
@@ -217,12 +294,14 @@ export default function PropertyGrid() {
     const base: ListedProperty[] = isSold ? data?.sold ?? [] : data?.available ?? [];
     const q = query.trim().toLowerCase();
     const { min, max } = PRICE_OPTIONS[priceIdx];
+    const type = TYPE_OPTIONS[typeIdx];
     const filtered = base.filter((p) => {
       if (q && !`${p.address} ${p.city}`.toLowerCase().includes(q)) return false;
       const price = numericPrice(p, isSold);
       if (price < min || price > max) return false;
       if (p.beds < minBeds) return false;
       if (p.baths < minBaths) return false;
+      if (type !== "Any type" && p.propType !== type) return false;
       return true;
     });
     const sorted = [...filtered];
@@ -230,7 +309,7 @@ export default function PropertyGrid() {
     else if (sort === "price-asc") sorted.sort((a, b) => numericPrice(a, isSold) - numericPrice(b, isSold));
     else if (sort === "beds-desc") sorted.sort((a, b) => b.beds - a.beds);
     return sorted;
-  }, [data, query, priceIdx, minBeds, minBaths, sort, isSold]);
+  }, [data, query, priceIdx, minBeds, minBaths, typeIdx, sort, isSold]);
 
   return (
     <section className="w-full bg-background-50 py-16 md:py-20 lg:py-24">
@@ -323,6 +402,24 @@ export default function PropertyGrid() {
               )}
             </FilterDropdown>
 
+            <FilterDropdown label={TYPE_OPTIONS[typeIdx]} active={typeIdx !== 0}>
+              {(close) => (
+                <div className="flex flex-col gap-0.5">
+                  {TYPE_OPTIONS.map((t, i) => (
+                    <DropdownOption
+                      key={t}
+                      label={t}
+                      selected={i === typeIdx}
+                      onClick={() => {
+                        setTypeIdx(i);
+                        close();
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+            </FilterDropdown>
+
             {/* List / Map — on mobile these are mutually exclusive full-width
                 views; on desktop, List keeps the default split view and Map
                 expands to a full-width focused map. */}
@@ -362,16 +459,7 @@ export default function PropertyGrid() {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              {fullSearchUrl && (
-                <a
-                  href={fullSearchUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-4 py-2.5 text-sm font-medium text-foreground-700 border border-background-300 rounded-full hover:border-foreground-400 transition-colors whitespace-nowrap"
-                >
-                  Search the full MLS
-                </a>
-              )}
+              <AccountMenu />
               <SaveSearchButton
                 searchName={`${isSold ? "Sold" : "Available"} homes${minBeds ? `, ${minBeds}+ beds` : ""}${
                   priceIdx ? `, ${PRICE_OPTIONS[priceIdx].label}` : ""
@@ -418,7 +506,21 @@ export default function PropertyGrid() {
                     className="grid grid-cols-1 sm:grid-cols-2 gap-6 lg:gap-8 lg:max-h-[760px] lg:overflow-y-auto lg:pr-3"
                   >
                     {properties.map((property) => (
-                      <PropertyCard key={property.id} property={property} isSold={activeTab === "sold"} />
+                      <PropertyCard
+                        key={property.id}
+                        property={property}
+                        isSold={activeTab === "sold"}
+                        showSave
+                        initialSaved={savedMls.has(property.listingID)}
+                        onToggleSaved={(mlsId, isSaved) => {
+                          setSavedMls((prev) => {
+                            const next = new Set(prev);
+                            if (isSaved) next.add(mlsId);
+                            else next.delete(mlsId);
+                            return next;
+                          });
+                        }}
+                      />
                     ))}
                   </motion.div>
                 </AnimatePresence>
