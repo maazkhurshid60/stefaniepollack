@@ -40,7 +40,17 @@ export default function PageHero({
           aria-hidden="true"
           className="absolute inset-0 w-full h-full object-cover scale-125 blur-2xl"
         />
-        <img src={image} alt={imageAlt} className="relative w-full h-full object-contain" />
+        {/* Phones are the one place the band can't match the photo: min-h holds
+            it at 520px while a 3:2 photo would only be ~260px tall there, so
+            object-contain would leave half the band blurred backdrop. Fill it
+            by cropping instead — the crop is horizontal (the photo scales to
+            the band's height and overflows its width), so nothing is lost from
+            the top or bottom of the frame. Desktop keeps the whole photo. */}
+        <img
+          src={image}
+          alt={imageAlt}
+          className="relative w-full h-full object-cover md:object-contain"
+        />
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/55" />
       </div>
 
