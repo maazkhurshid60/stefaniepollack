@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Search, Trash2, Lock, Heart } from "lucide-react";
 import PageHero from "@/components/feature/PageHero";
-import { useAuth } from "@/hooks/useAuth";
+import { useLead } from "@/hooks/useLead";
 import { useIdxListings } from "@/hooks/useIdxListings";
-import { listFavoriteMlsIds } from "@/lib/favorites";
+import { useSavedFavorites } from "@/hooks/useSavedFavorites";
 import { listSavedSearches, deleteSavedSearch, type SavedSearchRow } from "@/lib/savedSearches";
 import { PropertyCard, type ListedProperty } from "../listings/components/PropertyGrid";
 
@@ -16,16 +16,14 @@ function criteriaSummary(criteria: Record<string, unknown>): string {
 }
 
 export default function Account() {
-  const { user, loading: authLoading, requireAuth } = useAuth();
+  const { leadId, loading: authLoading, requireLead } = useLead();
   const [tab, setTab] = useState<"favorites" | "searches">("favorites");
 
   /* ---------- Favorites ---------- */
   const { data, loading: listingsLoading } = useIdxListings();
+  const fetchedSavedMls = useSavedFavorites();
   const [savedMls, setSavedMls] = useState<Set<string>>(new Set());
-  useEffect(() => {
-    if (!user) return;
-    listFavoriteMlsIds(user.id).then(setSavedMls);
-  }, [user]);
+  useEffect(() => setSavedMls(fetchedSavedMls), [fetchedSavedMls]);
   const favorites = useMemo((): { property: ListedProperty; isSold: boolean }[] => {
     if (!data) return [];
     const available = data.available.filter((p) => savedMls.has(p.listingID)).map((property) => ({ property, isSold: false }));
@@ -39,20 +37,20 @@ export default function Account() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user) {
+    if (!leadId) {
       setSearches([]);
       return;
     }
     setLoadingSearches(true);
-    listSavedSearches(user.id)
+    listSavedSearches(leadId)
       .then(setSearches)
       .finally(() => setLoadingSearches(false));
-  }, [user]);
+  }, [leadId]);
 
   const removeSearch = async (searchId: string) => {
-    if (!user) return;
+    if (!leadId) return;
     setDeletingId(searchId);
-    const ok = await deleteSavedSearch(user.id, searchId);
+    const ok = await deleteSavedSearch(leadId, searchId);
     if (ok) setSearches((prev) => prev.filter((s) => s.id !== searchId));
     setDeletingId(null);
   };
@@ -72,7 +70,7 @@ export default function Account() {
 
       <section className="w-full bg-background-50 py-20 md:py-28 lg:py-36">
         <div className="w-full px-6 md:px-10 lg:px-16">
-          {!user ? (
+          {!leadId ? (
             <div className="max-w-2xl mx-auto">
               <motion.div
                 initial={{ opacity: 0, y: 24 }}
@@ -83,16 +81,16 @@ export default function Account() {
                 <div className="w-12 h-12 rounded-full bg-primary-100/70 text-primary-700 flex items-center justify-center mx-auto mb-5">
                   <Lock className="w-5 h-5" strokeWidth={1.5} />
                 </div>
-                <h1 className="font-heading text-2xl text-foreground-950 mb-2">Sign In To Continue</h1>
+                <h1 className="font-heading text-2xl text-foreground-950 mb-2">Continue To See Your Favorites</h1>
                 <p className="text-sm text-foreground-600 mb-6">
-                  Sign in to see your favorite homes and saved searches.
+                  Save your info to see your favorite homes and saved searches.
                 </p>
                 <button
                   type="button"
-                  onClick={() => requireAuth()}
+                  onClick={() => requireLead()}
                   className="px-6 py-3 bg-foreground-950 text-background-50 text-sm font-medium tracking-wide uppercase rounded-md hover:bg-foreground-800 transition-colors"
                 >
-                  Sign In / Register
+                  Continue
                 </button>
               </motion.div>
             </div>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "@/hooks/useAuth";
+import { useLead } from "@/hooks/useLead";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -17,7 +17,7 @@ const navLinks = [
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { user, requireAuth, signOut } = useAuth();
+  const { leadId, requireLead, signOut } = useLead();
   const { pathname } = useLocation();
   // Inner pages have no dark hero behind the header — keep it solid & legible
   // from the moment they load, not just after scrolling past 60px.
@@ -87,7 +87,7 @@ export default function Header() {
 
             {/* Desktop CTA */}
             <div className="hidden lg:flex items-center gap-5">
-              {user ? (
+              {leadId ? (
                 <div className="flex items-center gap-4">
                   <a
                     href="/account"
@@ -110,7 +110,7 @@ export default function Header() {
               ) : (
                 <button
                   type="button"
-                  onClick={() => requireAuth()}
+                  onClick={() => requireLead()}
                   className={`text-sm font-medium tracking-wide uppercase transition-colors duration-300 whitespace-nowrap ${
                     solid ? "text-foreground-700 hover:text-foreground-950" : "text-white/80 hover:text-white"
                   }`}
@@ -182,7 +182,7 @@ export default function Header() {
                   {link.label}
                 </motion.a>
               ))}
-              {user ? (
+              {leadId ? (
                 <motion.a
                   href="/account"
                   initial={{ opacity: 0, y: 20 }}
@@ -199,7 +199,7 @@ export default function Header() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: navLinks.length * 0.08, duration: 0.4 }}
-                  onClick={() => { setMobileOpen(false); requireAuth(); }}
+                  onClick={() => { setMobileOpen(false); requireLead(); }}
                   className="text-lg font-medium text-foreground-700 hover:text-primary-600 transition-colors"
                 >
                   Sign In

@@ -4,8 +4,9 @@ import { BedDouble, Bath, Ruler, Search, LayoutGrid, Map as MapIcon, ChevronDown
 import { useIdxListings } from "@/hooks/useIdxListings";
 import type { AvailableProperty, SoldProperty } from "@/lib/idx";
 import { PHOTO_FALLBACK } from "@/lib/media";
-import { useAuth } from "@/hooks/useAuth";
-import { addFavorite, removeFavorite, listFavoriteMlsIds } from "@/lib/favorites";
+import { useLead } from "@/hooks/useLead";
+import { addFavorite, removeFavorite } from "@/lib/favorites";
+import { useSavedFavorites } from "@/hooks/useSavedFavorites";
 import PropertyMap from "./PropertyMap";
 import SaveSearchButton from "./SaveSearchButton";
 
@@ -97,7 +98,7 @@ function DropdownOption({ label, selected, onClick }: { label: string; selected:
 }
 
 function AccountMenu() {
-  const { user, requireAuth, signOut } = useAuth();
+  const { leadId, email, requireLead, signOut } = useLead();
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -149,9 +150,9 @@ function AccountMenu() {
               </div>
 
               <div className="flex-1 p-6">
-                {user ? (
+                {leadId ? (
                   <div className="flex flex-col gap-2">
-                    <p className="text-sm text-foreground-500 mb-4 break-words">Signed in as <b className="text-foreground-950">{user.email}</b></p>
+                    <p className="text-sm text-foreground-500 mb-4 break-words">Signed in as <b className="text-foreground-950">{email}</b></p>
                     <a
                       href="/account"
                       onClick={() => setOpen(false)}
@@ -179,7 +180,7 @@ function AccountMenu() {
                     </p>
                     <button
                       type="button"
-                      onClick={() => { setOpen(false); requireAuth(); }}
+                      onClick={() => { setOpen(false); requireLead(); }}
                       className="w-full px-6 py-3 bg-foreground-950 text-background-50 text-sm font-medium tracking-wide uppercase rounded-md hover:bg-foreground-800 transition-colors"
                     >
                       Sign In / Register
@@ -210,20 +211,22 @@ export function PropertyCard({
   onToggleSaved?: (mlsId: string, saved: boolean) => void;
 }) {
   const price = isSold ? (property as SoldProperty).soldPrice : (property as AvailableProperty).price;
-  const { user, requireAuth } = useAuth();
+  const { leadId, requireLead } = useLead();
   const [saved, setSaved] = useState(initialSaved);
   useEffect(() => setSaved(initialSaved), [initialSaved]);
 
   const toggleSave = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!user) {
-      requireAuth("Sign in to save this home to your favorites.");
+    if (!leadId) {
+      requireLead("Sign in to save this home to your favorites.");
       return;
     }
     const next = !saved;
     setSaved(next);
-    const persist = next ? addFavorite(user.id, property.listingID) : removeFavorite(user.id, property.listingID);
+    const persist = next
+      ? addFavorite(leadId, property.idxID, property.listingID)
+      : removeFavorite(leadId, property.listingID);
     persist.then((ok) => {
       if (ok) onToggleSaved?.(property.listingID, next);
       else setSaved(!next);
@@ -300,16 +303,9 @@ export default function PropertyGrid() {
   const [sort, setSort] = useState(SORT_OPTIONS[0].value);
 
   const { data, loading } = useIdxListings();
-  const { user } = useAuth();
+  const fetchedSavedMls = useSavedFavorites();
   const [savedMls, setSavedMls] = useState<Set<string>>(new Set());
-
-  useEffect(() => {
-    if (!user) {
-      setSavedMls(new Set());
-      return;
-    }
-    listFavoriteMlsIds(user.id).then(setSavedMls);
-  }, [user]);
+  useEffect(() => setSavedMls(fetchedSavedMls), [fetchedSavedMls]);
 
   const isSold = activeTab === "sold";
 

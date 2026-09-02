@@ -19,8 +19,9 @@ import {
 import { useIdxListings } from "@/hooks/useIdxListings";
 import type { AvailableProperty, SoldProperty } from "@/lib/idx";
 import { PHOTO_FALLBACK } from "@/lib/media";
-import { useAuth } from "@/hooks/useAuth";
-import { listFavoriteMlsIds, addFavorite, removeFavorite } from "@/lib/favorites";
+import { useLead } from "@/hooks/useLead";
+import { addFavorite, removeFavorite } from "@/lib/favorites";
+import { useSavedFavorites } from "@/hooks/useSavedFavorites";
 import { PropertyCard } from "../components/PropertyGrid";
 import PropertyLocationMap from "./PropertyLocationMap";
 import NotFound from "../../NotFound";
@@ -40,7 +41,8 @@ export default function PropertyDetail() {
   const [featTab, setFeatTab] = useState<(typeof FEATURE_TABS)[number]["key"]>("interior");
   const [copied, setCopied] = useState(false);
   const { data, loading } = useIdxListings();
-  const { user, requireAuth } = useAuth();
+  const { leadId, requireLead } = useLead();
+  const savedMls = useSavedFavorites();
 
   useEffect(() => {
     setActiveIndex(0);
@@ -59,12 +61,8 @@ export default function PropertyDetail() {
   const matchMlsId = match?.property.listingID;
 
   useEffect(() => {
-    if (!user || !matchMlsId) {
-      setSaved(false);
-      return;
-    }
-    listFavoriteMlsIds(user.id).then((ids) => setSaved(ids.has(matchMlsId)));
-  }, [user, matchMlsId]);
+    setSaved(!!matchMlsId && savedMls.has(matchMlsId));
+  }, [savedMls, matchMlsId]);
 
   const similar = useMemo(() => {
     if (!data || !match) return [];
@@ -237,15 +235,15 @@ export default function PropertyDetail() {
             <div className="flex items-center gap-5">
               <button
                 onClick={() => {
-                  if (!user) {
-                    requireAuth("Sign in to save this home to your favorites.");
+                  if (!leadId) {
+                    requireLead("Sign in to save this home to your favorites.");
                     return;
                   }
                   const on = !saved;
                   setSaved(on);
                   const persist = on
-                    ? addFavorite(user.id, property.listingID)
-                    : removeFavorite(user.id, property.listingID);
+                    ? addFavorite(leadId, property.idxID, property.listingID)
+                    : removeFavorite(leadId, property.listingID);
                   persist.then((ok) => {
                     if (!ok) setSaved(!on);
                   });

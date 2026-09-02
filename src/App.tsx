@@ -7,12 +7,12 @@ import Footer from "./components/feature/Footer";
 import ScrollToTop from "./components/feature/ScrollToTop";
 import Cursor from "./components/feature/Cursor";
 import AuthModal from "./components/feature/AuthModal";
-import { AuthProvider } from "./hooks/useAuth";
+import { LeadProvider } from "./hooks/useLead";
 
 function App() {
   return (
     <I18nextProvider i18n={i18n}>
-      <AuthProvider>
+      <LeadProvider>
         <BrowserRouter basename={__BASE_PATH__}>
           <div className="min-h-screen flex flex-col">
             <Header />
@@ -25,7 +25,7 @@ function App() {
             <AuthModal />
           </div>
         </BrowserRouter>
-      </AuthProvider>
+      </LeadProvider>
     </I18nextProvider>
   );
 }

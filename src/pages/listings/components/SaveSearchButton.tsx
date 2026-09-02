@@ -1,15 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Bookmark, X } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
-import { createSavedSearch } from "@/lib/savedSearches";
-import { createLead, saveLeadSearch } from "@/lib/idx";
+import { useLead } from "@/hooks/useLead";
+import { saveLeadSearch } from "@/lib/idx";
 
-const LEAD_ID_KEY = "idx-lead-id";
-
-/** "Save this search" — stores the search under the signed-in account
- *  (Supabase), and best-effort mirrors it into IDX Broker's own lead/CRM
- *  so Stefanie sees it in her IDX dashboard too. The IDX side never blocks
- *  success shown to the user. */
+/** "Save this search" — saves the search directly into IDX Broker's
+ *  lead/CRM under the current lead, so it shows up in Stefanie's IDX
+ *  dashboard. */
 export default function SaveSearchButton({
   searchName,
   criteria,
@@ -17,7 +13,7 @@ export default function SaveSearchButton({
   searchName: string;
   criteria: Record<string, string>;
 }) {
-  const { user, requireAuth } = useAuth();
+  const { leadId, requireLead } = useLead();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(searchName);
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
@@ -33,8 +29,8 @@ export default function SaveSearchButton({
   }, [open]);
 
   const openPopover = () => {
-    if (!user) {
-      requireAuth("Sign in to save this search and get notified of new matches.");
+    if (!leadId) {
+      requireLead("Sign in to save this search and get notified of new matches.");
       return;
     }
     setName(searchName);
@@ -42,34 +38,14 @@ export default function SaveSearchButton({
     setOpen(true);
   };
 
-  const mirrorToIdx = async () => {
-    if (!user?.email) return;
-    try {
-      let leadId = localStorage.getItem(LEAD_ID_KEY);
-      if (!leadId) {
-        const fullName = (user.user_metadata?.full_name as string | undefined) || "";
-        const [firstName, ...rest] = fullName.trim().split(" ");
-        leadId = await createLead({
-          firstName: firstName || "Search",
-          lastName: rest.join(" ") || "Alert",
-          email: user.email,
-          phone: (user.user_metadata?.phone as string | undefined) || undefined,
-        });
-        if (leadId) localStorage.setItem(LEAD_ID_KEY, leadId);
-      }
-      if (leadId) await saveLeadSearch(leadId, { searchName: name, search: criteria });
-    } catch {
-      /* best-effort only — the Supabase save is the source of truth for the user */
-    }
-  };
-
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!leadId) return;
     setStatus("saving");
-    const ok = await createSavedSearch(user.id, name.trim() || searchName, criteria);
+    const ok = await saveLeadSearch(leadId, { searchName: name.trim() || searchName, search: criteria }).catch(
+      () => false
+    );
     setStatus(ok ? "saved" : "error");
-    if (ok) mirrorToIdx();
   };
 
   return (

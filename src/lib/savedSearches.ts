@@ -1,4 +1,4 @@
-import { supabase, SITE } from "./supabase";
+import { getLeadSearches, saveLeadSearch, deleteLeadSearch } from "./idx";
 
 export type SavedSearchRow = {
   id: string;
@@ -7,29 +7,19 @@ export type SavedSearchRow = {
   created_at: string;
 };
 
-export async function listSavedSearches(userId: string): Promise<SavedSearchRow[]> {
-  const { data, error } = await supabase
-    .from("saved_searches")
-    .select("id, name, criteria, created_at")
-    .eq("user_id", userId)
-    .eq("site", SITE)
-    .order("created_at", { ascending: false });
-  if (error || !data) return [];
-  return data as SavedSearchRow[];
+export async function listSavedSearches(leadId: string): Promise<SavedSearchRow[]> {
+  const rows = await getLeadSearches(leadId).catch(() => []);
+  return rows.map((s) => ({ id: s.id, name: s.searchName, criteria: s.criteria, created_at: s.created }));
 }
 
 export async function createSavedSearch(
-  userId: string,
+  leadId: string,
   name: string,
-  criteria: Record<string, unknown>
+  criteria: Record<string, string>
 ): Promise<boolean> {
-  const { error } = await supabase
-    .from("saved_searches")
-    .insert({ user_id: userId, site: SITE, name, criteria });
-  return !error;
+  return saveLeadSearch(leadId, { searchName: name, search: criteria }).catch(() => false);
 }
 
-export async function deleteSavedSearch(userId: string, id: string): Promise<boolean> {
-  const { error } = await supabase.from("saved_searches").delete().eq("user_id", userId).eq("id", id);
-  return !error;
+export async function deleteSavedSearch(leadId: string, searchId: string): Promise<boolean> {
+  return deleteLeadSearch(leadId, searchId).catch(() => false);
 }

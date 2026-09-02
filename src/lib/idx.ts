@@ -304,12 +304,19 @@ export async function createLead(input: {
 }): Promise<string | null> {
   // The create response key is `newID` (verified against the live API —
   // not `leadID`, despite what IDX's own docs examples imply elsewhere).
-  const res = await idxFetch<{ newID?: number | string }>("leads/lead", {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
-  });
-  return res.newID != null ? String(res.newID) : null;
+  // IDX returns 409 "Lead already exists" for a duplicate email — treat
+  // that as success and look the existing lead up instead of throwing,
+  // so a returning visitor never gets stuck on a form that silently fails.
+  try {
+    const res = await idxFetch<{ newID?: number | string }>("leads/lead", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+    return res.newID != null ? String(res.newID) : null;
+  } catch {
+    return findLeadByEmail(input.email).catch(() => null);
+  }
 }
 
 type RawLead = { id: string; email: string };
@@ -363,5 +370,39 @@ export async function getLeadSearches(leadId: string): Promise<SavedSearch[]> {
 
 export async function deleteLeadSearch(leadId: string, searchId: string): Promise<boolean> {
   const res = await fetch(idxUrl(`leads/search/${leadId}/${searchId}`), { method: "DELETE" });
+  return res.ok;
+}
+
+type RawLeadFavorite = { id: string; listingID: string };
+
+export async function getLeadFavorites(leadId: string): Promise<Map<string, string>> {
+  const res = await idxFetch<RawLeadFavorite[]>(`leads/property/${leadId}`);
+  const map = new Map<string, string>();
+  for (const row of res || []) map.set(row.listingID, row.id);
+  return map;
+}
+
+/** IDX returns a raw 500 for an already-favorited listing — treat that as
+ *  success and look the existing favorite up instead of throwing. */
+export async function saveLeadFavorite(
+  leadId: string,
+  idxId: string,
+  listingId: string
+): Promise<string | null> {
+  try {
+    const res = await idxFetch<{ newID?: number | string }>(`leads/property/${leadId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ propertyName: listingId, property: { idxID: idxId, listingID: listingId } }),
+    });
+    return res.newID != null ? String(res.newID) : null;
+  } catch {
+    const existing = await getLeadFavorites(leadId).catch(() => new Map<string, string>());
+    return existing.get(listingId) ?? null;
+  }
+}
+
+export async function deleteLeadFavorite(leadId: string, favoriteId: string): Promise<boolean> {
+  const res = await fetch(idxUrl(`leads/property/${leadId}/${favoriteId}`), { method: "DELETE" });
   return res.ok;
 }
