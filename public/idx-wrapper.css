@@ -1,0 +1,109 @@
+/* Dedicated, hand-maintained stylesheet for public/idx-wrapper.html — the
+ * donor page IDX Broker's Dynamic Wrapper fetches to extract header/footer
+ * markup. Kept deliberately separate from the app's own build output (no
+ * hashed asset paths, no Vite runtime) so this URL never changes between
+ * deploys and never depends on a live React runtime. If Header.tsx or
+ * Footer.tsx's visual design changes, mirror the change here too. */
+
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap");
+
+:root {
+  --background-50: oklch(0.97 0.01 80);
+  --background-100: oklch(0.99 0.01 85);
+  --background-200: oklch(0.95 0.02 75);
+  --background-300: oklch(0.92 0.02 70);
+  --background-500: oklch(0.84 0.03 60);
+  --background-600: oklch(0.78 0.03 55);
+  --primary-200: oklch(0.84 0.04 55);
+  --primary-300: oklch(0.78 0.05 55);
+  --primary-600: oklch(0.66 0.05 55);
+  --foreground-700: oklch(0.44 0.01 45);
+  --foreground-800: oklch(0.34 0.01 40);
+  --foreground-900: oklch(0.24 0.01 35);
+  --foreground-950: oklch(0.07 0.00 0);
+  --font-heading: "Playfair Display", Georgia, serif;
+  --font-body: "Inter", system-ui, sans-serif;
+  --header-h: 88px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-body); color: var(--foreground-950); background: var(--background-50); -webkit-font-smoothing: antialiased; }
+img { max-width: 100%; display: block; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; background: none; border: 0; }
+ul, ol { list-style: none; }
+h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font-size: 13.5px; font-weight: 500; letter-spacing: 0.03em; text-transform: uppercase;
+  padding: 12px 22px; border-radius: 6px; white-space: nowrap;
+}
+.btn-primary { background: var(--foreground-950); color: var(--background-50); }
+
+/* ---------- Header (always rendered in its "solid" look — no scroll JS
+   here like the live site's Header.tsx has) ---------- */
+.site-header {
+  position: relative; z-index: 200;
+  background: rgba(247, 246, 242, 0.95);
+  border-bottom: 1px solid var(--background-300);
+}
+.header-inner {
+  width: 100%; max-width: 1600px; margin-inline: auto; padding-inline: 24px;
+  height: var(--header-h);
+  display: flex; align-items: center; justify-content: space-between; gap: 24px;
+}
+@media (min-width: 768px) { .header-inner { padding-inline: 40px; } }
+@media (min-width: 1024px) { .header-inner { padding-inline: 64px; } }
+.wordmark img { height: 44px; width: auto; filter: brightness(0); }
+@media (min-width: 768px) { .wordmark img { height: 48px; } }
+.main-nav { display: none; align-items: center; gap: 28px; }
+@media (min-width: 1024px) { .main-nav { display: flex; } }
+.nav-link { font-size: 13.5px; font-weight: 500; letter-spacing: 0.02em; text-transform: uppercase; color: var(--foreground-800); white-space: nowrap; }
+
+/* ---------- Footer ---------- */
+.site-footer { background: var(--foreground-900); color: var(--background-100); }
+.footer-main {
+  width: 100%; padding: 64px 24px 48px;
+  display: grid; grid-template-columns: 1fr; gap: 40px;
+}
+@media (min-width: 640px) { .footer-main { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .footer-main { padding-inline: 64px; grid-template-columns: 1.5fr 1px 0.7fr 0.7fr 1fr; align-items: start; } }
+.footer-divider { display: none; background: rgba(230, 224, 212, 0.15); }
+@media (min-width: 1024px) { .footer-divider { display: block; height: 100%; } }
+.footer-logo img { height: 44px; width: auto; filter: brightness(0) invert(1); opacity: 0.95; }
+.footer-tagline { margin-top: 20px; font-size: 15px; color: var(--background-500); max-width: 30ch; line-height: 1.6; }
+.footer-social { margin-top: 24px; display: flex; gap: 10px; }
+.social-link { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; border: 1px solid rgba(230, 224, 212, 0.25); color: var(--background-300); }
+.social-link svg { width: 16px; height: 16px; }
+.footer-col h4 { font-size: 11px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--primary-300); margin-bottom: 20px; }
+.footer-col ul { display: flex; flex-direction: column; gap: 12px; font-size: 15px; color: var(--background-200); }
+.footer-col.contact ul { gap: 14px; }
+.footer-contact-link { display: flex; align-items: flex-start; gap: 10px; }
+.footer-contact-link svg { width: 16px; height: 16px; flex: none; margin-top: 2px; color: var(--primary-300); }
+
+.footer-license-row { border-top: 1px solid rgba(230, 224, 212, 0.15); }
+.footer-license-inner {
+  width: 100%; padding: 32px 24px; display: flex; flex-direction: column; gap: 32px;
+}
+@media (min-width: 1024px) { .footer-license-inner { padding-inline: 64px; flex-direction: row; align-items: flex-start; } }
+.footer-licensing { flex: none; }
+@media (min-width: 1024px) { .footer-licensing { max-width: 320px; } }
+.footer-licensing h4 { font-size: 11px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--primary-300); margin-bottom: 16px; }
+.footer-compass-logo { height: 22px; width: auto; opacity: 0.9; margin-bottom: 16px; filter: brightness(0) invert(1); }
+.footer-licensing p { font-size: 12px; color: var(--background-500); line-height: 1.6; }
+.footer-vdivider { display: none; width: 1px; background: rgba(230, 224, 212, 0.15); align-self: stretch; }
+@media (min-width: 1024px) { .footer-vdivider { display: block; } }
+.footer-disclaimer { font-size: 12px; line-height: 1.7; color: var(--background-600); }
+
+.footer-bottom { border-top: 1px solid rgba(230, 224, 212, 0.15); }
+.footer-bottom-inner {
+  width: 100%; padding: 20px 24px; display: flex; flex-wrap: wrap; justify-content: space-between;
+  align-items: center; gap: 16px; font-size: 12px; color: var(--background-600);
+}
+@media (min-width: 1024px) { .footer-bottom-inner { padding-inline: 64px; } }
+.footer-legal { display: flex; gap: 20px; }
+.footer-legal a { color: var(--background-600); }
+
+/* The idxStart/idxStop gap where IDX Broker splices in its own MLS content */
+#idxStart, #idxStop { display: block; }

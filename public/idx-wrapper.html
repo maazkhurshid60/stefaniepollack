@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<!--
+  IDX Broker Dynamic Wrapper source — NOT a page of the live site.
+
+  IDX Broker's crawler fetches this exact file and string-splices its own
+  MLS search markup between the #idxStart and #idxStop divs below, then
+  serves the combined page at stefaniepollack.idxbroker.com. It's a plain
+  static file (no React/Vite) on purpose — see the equivalent file/comment
+  on the Andrew Liberty site (my-app/public/idx-wrapper.html) for why: a
+  live SPA's own hydration/router script would treat IDX's injected DOM as
+  foreign and strip it a moment after load. A static HTML file has no such
+  script, so nothing ever touches the injected content.
+
+  Keep this file's markup/classes in sync with src/components/feature/
+  Header.tsx and Footer.tsx by hand if their design changes — see
+  public/idx-wrapper.css.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Stefanie Pollack | Studio City Real Estate Agent</title>
+  <!-- ?v= is bumped on every edit to idx-wrapper.css so browsers (and any
+       CDN/proxy caching) fetch the new file instead of an old cached copy
+       under this same static URL — bump it any time this stylesheet changes. -->
+  <link rel="stylesheet" href="https://www.stefaniepollack.com/idx-wrapper.css?v=1" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="wordmark" href="https://www.stefaniepollack.com/" aria-label="Stefanie Pollack — home">
+        <img src="https://images.squarespace-cdn.com/content/v1/62857f9467398e0fd622fe08/1765408611435-CQO5009VHL14BILFBT6P/Stefanie+Pollack_2025+Website+updates_Logo_Black.png?format=500w" alt="Pollack Homes" />
+      </a>
+
+      <nav class="main-nav" aria-label="Primary">
+        <a class="nav-link" href="https://www.stefaniepollack.com/about">About</a>
+        <a class="nav-link" href="https://www.stefaniepollack.com/listings">Listings</a>
+        <a class="nav-link" href="https://www.stefaniepollack.com/blog">Blog</a>
+        <a class="nav-link" href="https://www.stefaniepollack.com/buyers">Buyers</a>
+        <a class="nav-link" href="https://www.stefaniepollack.com/sellers">Sellers</a>
+        <a class="nav-link" href="https://www.stefaniepollack.com/resources">Resources</a>
+      </nav>
+
+      <a href="https://www.stefaniepollack.com/contact" class="btn btn-primary">Contact</a>
+    </div>
+  </header>
+
+  <div id="idxStart"></div>
+  <div id="idxStop"></div>
+
+  <footer class="site-footer">
+    <div class="footer-main">
+      <div>
+        <a class="footer-logo" href="https://www.stefaniepollack.com/" aria-label="Stefanie Pollack — home">
+          <img src="https://images.squarespace-cdn.com/content/v1/62857f9467398e0fd622fe08/1765408611435-CQO5009VHL14BILFBT6P/Stefanie+Pollack_2025+Website+updates_Logo_Black.png?format=500w" alt="Pollack Homes" />
+        </a>
+        <p class="footer-tagline">Connecting people with homes and community. Over 20 years of experience in Studio City and the San Fernando Valley.</p>
+        <div class="footer-social" aria-label="Social links">
+          <a href="https://www.instagram.com/stefanieismyrealtor/" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 22H15C20 22 22 20 22 15V9C22 4 20 2 15 2H9C4 2 2 4 2 9V15C2 20 4 22 9 22Z" /><path d="M12 15.5C13.933 15.5 15.5 13.933 15.5 12C15.5 10.067 13.933 8.5 12 8.5C10.067 8.5 8.5 10.067 8.5 12C8.5 13.933 10.067 15.5 12 15.5Z" /><path d="M17.6361 7H17.6477" stroke-width="2" /></svg>
+          </a>
+          <a href="https://www.facebook.com/StefIsMyRealtor/" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="Facebook">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 9.3V12.2H16.6C16.8 12.2 16.9 12.4 16.9 12.6L16.5 14.5C16.5 14.6 16.3 14.7 16.2 14.7H14V22H11V14.8H9.3C9.1 14.8 9 14.7 9 14.5V12.6C9 12.4 9.1 12.3 9.3 12.3H11V9C11 7.3 12.3 6 14 6H16.7C16.9 6 17 6.1 17 6.3V8.7C17 8.9 16.9 9 16.7 9H14.3C14.1 9 14 9.1 14 9.3Z" /><path d="M15 22H9C4 22 2 20 2 15V9C2 4 4 2 9 2H15C20 2 22 4 22 9V15C22 20 20 22 15 22Z" /></svg>
+          </a>
+          <a href="https://www.linkedin.com/in/stefaniedanhi/" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="LinkedIn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4V8h4v2a5 5 0 0 1 2-2z" /><rect x="2" y="9" width="4" height="12" /><circle cx="4" cy="4" r="2" /></svg>
+          </a>
+          <a href="https://www.youtube.com/channel/UC8QpQcHqoM_Lh3eLQXURNJA" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="YouTube">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s0-3.7.5-5.4c.3-1 1-1.7 2-2C6.2 4 12 4 12 4s5.8 0 7.5.6c1 .3 1.7 1 2 2 .5 1.7.5 5.4.5 5.4s0 3.7-.5 5.4c-.3 1-1 1.7-2 2-1.7.6-7.5.6-7.5.6s-5.8 0-7.5-.6c-1-.3-1.7-1-2-2C2 15.7 2 12 2 12Z" /><path d="M10 9.5v5l4.5-2.5-4.5-2.5Z" /></svg>
+          </a>
+        </div>
+      </div>
+
+      <div class="footer-divider"></div>
+
+      <div class="footer-col">
+        <h4>Navigation</h4>
+        <ul>
+          <li><a href="https://www.stefaniepollack.com/">Home</a></li>
+          <li><a href="https://www.stefaniepollack.com/about">About</a></li>
+          <li><a href="https://www.stefaniepollack.com/listings">Listings</a></li>
+          <li><a href="https://www.stefaniepollack.com/buyers">Buyers</a></li>
+          <li><a href="https://www.stefaniepollack.com/sellers">Sellers</a></li>
+          <li><a href="https://www.stefaniepollack.com/resources">Resources</a></li>
+          <li><a href="https://www.stefaniepollack.com/contact">Contact</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Explore</h4>
+        <ul>
+          <li><a href="https://www.stefaniepollack.com/neighborhoods">Neighborhoods</a></li>
+          <li><a href="https://www.stefaniepollack.com/philanthropy">Philanthropy</a></li>
+          <li><a href="https://www.stefaniepollack.com/sellers">Home Valuation</a></li>
+          <li><a href="https://www.stefaniepollack.com/listings">Sold Properties</a></li>
+          <li><a href="https://www.stefaniepollack.com/blog">Blog</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col contact">
+        <h4>Contact</h4>
+        <ul>
+          <li>
+            <a class="footer-contact-link" href="mailto:stefanie@pollackhomes.com">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>
+              <span>stefanie@pollackhomes.com</span>
+            </a>
+          </li>
+          <li>
+            <a class="footer-contact-link" href="tel:+18186256171">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384" /></svg>
+              <span>(818) 625-6171</span>
+            </a>
+          </li>
+          <li>
+            <span class="footer-contact-link">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg>
+              <span>Studio City, CA 91604</span>
+            </span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-license-row">
+      <div class="footer-license-inner">
+        <div class="footer-licensing">
+          <h4>Licensing</h4>
+          <img class="footer-compass-logo" src="https://www.stefaniepollack.com/images/compass-white.png" alt="Compass Real Estate" />
+          <p>Stefanie Pollack | CA DRE #01815614<br />Compass California, Inc. | CA DRE #01991628</p>
+        </div>
+        <div class="footer-vdivider"></div>
+        <p class="footer-disclaimer">
+          Compass is a real estate broker licensed by the State of California and abides by Equal
+          Housing Opportunity laws. All material presented herein is intended for informational
+          purposes only. Information is compiled from sources deemed reliable but is subject to
+          errors, omissions, changes in price, condition, sale, or withdrawal without notice. No
+          statement is made as to accuracy of any description. All measurements and square footages
+          are approximate. This is not intended to solicit property already listed. Nothing herein
+          shall be construed as legal, accounting, or other professional advice outside the realm of
+          real estate brokerage.
+        </p>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div class="footer-bottom-inner">
+        <p>© 2026 Stefanie Pollack Real Estate. All rights reserved. · Site by EM Creative Studio</p>
+        <div class="footer-legal">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Use</a>
+          <a href="#">Accessibility</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
