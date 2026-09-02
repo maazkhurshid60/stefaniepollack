@@ -12,7 +12,7 @@ export default function AuthModal() {
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "busy">("idle");
+  const [status, setStatus] = useState<"idle" | "busy" | "verify">("idle");
   const [error, setError] = useState("");
 
   const reset = () => {
@@ -33,7 +33,7 @@ export default function AuthModal() {
     e.preventDefault();
     setError("");
     setStatus("busy");
-    const { error: err } = await signIn({
+    const { error: err, created } = await signIn({
       email,
       firstName: firstName.trim(),
       lastName: lastName.trim(),
@@ -42,6 +42,10 @@ export default function AuthModal() {
     if (err) {
       setError(err);
       setStatus("idle");
+    } else if (created) {
+      // A new lead triggers IDX's "verify your email" message — say so, rather
+      // than leaving an unexplained email to turn up in their inbox.
+      setStatus("verify");
     } else {
       close();
     }
@@ -70,12 +74,32 @@ export default function AuthModal() {
               className="pointer-events-auto w-[min(420px,100%)] bg-background-50 rounded-2xl border border-background-200/60 shadow-xl p-7"
             >
               <div className="flex items-center justify-between">
-                <h2 className="font-heading text-xl text-foreground-950">Continue</h2>
+                <h2 className="font-heading text-xl text-foreground-950">
+                  {status === "verify" ? "Check your email" : "Continue"}
+                </h2>
                 <button onClick={close} aria-label="Close" className="text-foreground-400 hover:text-foreground-950 transition-colors">
                   <X className="w-5 h-5" strokeWidth={1.5} />
                 </button>
               </div>
 
+              {status === "verify" ? (
+                <>
+                  <p className="mt-3 text-sm text-foreground-600 leading-relaxed">
+                    We&rsquo;ve sent a link to <b className="text-foreground-950 break-words">{email}</b> to verify
+                    your address and activate your account. You&rsquo;re signed in here already — verifying also
+                    lets you use this same account on the full MLS search, so everything you save stays in one
+                    place.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={close}
+                    className="mt-5 w-full px-6 py-3 bg-foreground-950 text-background-50 text-sm font-medium tracking-wide uppercase rounded-md hover:bg-foreground-800 transition-colors"
+                  >
+                    Got it
+                  </button>
+                </>
+              ) : (
+                <>
               {modalReason && <p className="mt-2 text-sm text-foreground-600">{modalReason}</p>}
 
               <form onSubmit={submit} className="mt-5 flex flex-col gap-3">
@@ -123,6 +147,8 @@ export default function AuthModal() {
                   {status === "busy" ? "Please wait…" : "Continue"}
                 </button>
               </form>
+                </>
+              )}
             </motion.div>
           </div>
         </>

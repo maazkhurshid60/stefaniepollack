@@ -20,7 +20,13 @@ type LeadContextValue = {
     firstName: string;
     lastName: string;
     phone?: string;
-  }) => Promise<{ error: string | null }>;
+  }) => Promise<{
+    error: string | null;
+    /** True when this created a brand-new lead, which is when IDX sends its
+     *  "verify your email to activate your account" message — a returning
+     *  visitor is matched to their existing lead and gets no such email. */
+    created: boolean;
+  }>;
   signOut: () => void;
 };
 
@@ -51,6 +57,7 @@ export function LeadProvider({ children }: { children: React.ReactNode }) {
   const signIn: LeadContextValue["signIn"] = useCallback(async (input) => {
     try {
       let leadId = await findLeadByEmail(input.email);
+      const created = !leadId;
       if (!leadId) {
         leadId = await createLead({
           firstName: input.firstName,
@@ -59,13 +66,13 @@ export function LeadProvider({ children }: { children: React.ReactNode }) {
           phone: input.phone,
         });
       }
-      if (!leadId) return { error: "Something went wrong — please try again." };
+      if (!leadId) return { error: "Something went wrong — please try again.", created: false };
       const next: LeadSession = { leadId, email: input.email, firstName: input.firstName };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
       setSession(next);
-      return { error: null };
+      return { error: null, created };
     } catch {
-      return { error: "Something went wrong — please try again." };
+      return { error: "Something went wrong — please try again.", created: false };
     }
   }, []);
 
