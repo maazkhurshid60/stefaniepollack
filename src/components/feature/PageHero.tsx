@@ -15,17 +15,25 @@ export default function PageHero({
   image: string;
   imageAlt: string;
 }) {
+  /* The band is shaped to the photos themselves (all 1800x1200, i.e. 3:2)
+     rather than to a slice of viewport height. A fixed-height band is always
+     some other ratio than the photo, and object-contain then has to leave
+     the difference empty — which is where the side bars came from. Matching
+     the ratio means the photo fills the full width, edge to edge, with
+     nothing cropped off it.
+
+     min-h keeps a usable band on narrow phones (where 3:2 would only be
+     ~260px tall, too short for the heading); max-h stops it running away on
+     ultrawide monitors. In both of those the ratio no longer matches
+     exactly, which is what the blurred layer below is for. */
   return (
-    <section className="relative w-full h-[85vh] min-h-[560px] max-h-[900px] overflow-hidden">
+    <section className="relative w-full aspect-[3/2] min-h-[520px] max-h-[1750px] overflow-hidden">
       <div className="absolute inset-0 bg-foreground-950">
-        {/* Blurred, scaled-up copy of the same photo fills the whole band.
-            The sharp copy below is object-contain so the photo is always
-            shown in full (never cropping the subject) — but these are 3:2
-            photos in a band that's ~2.4:1 on a wide screen, so contain
-            always leaves side gaps. Filling them with a blurred blow-up of
-            the same image reads as a soft continuation instead of the flat
-            black bars that were there before. scale-125 keeps the blur's
-            soft edge outside the frame. */}
+        {/* Blurred, scaled-up copy of the same photo, as a backstop for the
+            min-h/max-h cases above (and sub-pixel rounding): any sliver the
+            sharp copy doesn't cover reads as a soft continuation of the
+            image rather than a hard black edge. scale-125 keeps the blur's
+            own soft edge outside the frame. */}
         <img
           src={image}
           alt=""
