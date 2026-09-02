@@ -9,6 +9,7 @@ import { addFavorite, removeFavorite } from "@/lib/favorites";
 import { useSavedFavorites } from "@/hooks/useSavedFavorites";
 import PropertyMap from "./PropertyMap";
 import SaveSearchButton from "./SaveSearchButton";
+import FullMlsLink from "./FullMlsLink";
 
 export type ListedProperty = AvailableProperty | SoldProperty;
 
@@ -496,16 +497,7 @@ export default function PropertyGrid() {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              {fullSearchUrl && (
-                <a
-                  href={fullSearchUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium text-foreground-700 border border-background-300 rounded-full hover:border-foreground-400 transition-colors whitespace-nowrap"
-                >
-                  Search the full MLS
-                </a>
-              )}
+              {fullSearchUrl && <FullMlsLink url={fullSearchUrl} />}
               <AccountMenu />
               <SaveSearchButton
                 searchName={`${isSold ? "Sold" : "Available"} homes${minBeds ? `, ${minBeds}+ beds` : ""}${
