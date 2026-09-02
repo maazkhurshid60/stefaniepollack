@@ -18,7 +18,21 @@ export default function PageHero({
   return (
     <section className="relative w-full h-[85vh] min-h-[560px] max-h-[900px] overflow-hidden">
       <div className="absolute inset-0 bg-foreground-950">
-        <img src={image} alt={imageAlt} className="w-full h-full object-contain" />
+        {/* Blurred, scaled-up copy of the same photo fills the whole band.
+            The sharp copy below is object-contain so the photo is always
+            shown in full (never cropping the subject) — but these are 3:2
+            photos in a band that's ~2.4:1 on a wide screen, so contain
+            always leaves side gaps. Filling them with a blurred blow-up of
+            the same image reads as a soft continuation instead of the flat
+            black bars that were there before. scale-125 keeps the blur's
+            soft edge outside the frame. */}
+        <img
+          src={image}
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 w-full h-full object-cover scale-125 blur-2xl"
+        />
+        <img src={image} alt={imageAlt} className="relative w-full h-full object-contain" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/55" />
       </div>
 
