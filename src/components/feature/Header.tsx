@@ -19,9 +19,11 @@ export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { leadId, requireLead, signOut } = useLead();
   const { pathname } = useLocation();
-  // Inner pages have no dark hero behind the header — keep it solid & legible
-  // from the moment they load, not just after scrolling past 60px.
-  const solid = scrolled || pathname !== "/";
+  // Almost every page opens on a full-bleed dark photo hero (PageHero, the
+  // blog article hero, the listing-detail gallery) that the header overlays
+  // transparently, same as the homepage. The Listings grid is the one page
+  // with no hero — keep it solid & legible from the moment it loads.
+  const solid = scrolled || pathname === "/listings";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
