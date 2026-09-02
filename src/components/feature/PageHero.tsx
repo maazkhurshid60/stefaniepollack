@@ -16,7 +16,7 @@ export default function PageHero({
   imageAlt: string;
 }) {
   return (
-    <section className="relative w-full h-[55vh] min-h-[420px] max-h-[640px] overflow-hidden">
+    <section className="relative w-full h-[85vh] min-h-[560px] max-h-[900px] overflow-hidden">
       <div className="absolute inset-0 bg-foreground-950">
         <img src={image} alt={imageAlt} className="w-full h-full object-contain" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/55" />
