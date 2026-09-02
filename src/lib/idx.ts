@@ -381,13 +381,56 @@ export async function deleteLeadSearch(leadId: string, searchId: string): Promis
   return res.ok;
 }
 
-type RawLeadFavorite = { id: string; listingID: string };
+/** A saved-property row carries the favourite's own id/date *and* a full copy
+ *  of the listing itself (verified live: address, price, beds/baths, photos,
+ *  status, coordinates). The couple of fields the regular listing feed has
+ *  that this one omits — detailsUrlSlug, yearBuilt, advanced, propSubType —
+ *  are all optional to the mappers below. */
+type RawLeadFavorite = { id: string; listingID: string } & Partial<RawIdxListing> & {
+  fullDetailsURL?: string;
+};
 
 export async function getLeadFavorites(leadId: string): Promise<Map<string, string>> {
   const res = await idxFetch<RawLeadFavorite[]>(`leads/property/${leadId}`);
   const map = new Map<string, string>();
   for (const row of res || []) map.set(row.listingID, row.id);
   return map;
+}
+
+export type FavoriteListing = AvailableProperty & {
+  /** The saved-property record's own id — needed to delete it. */
+  favoriteId: string;
+  /** IDX's own hosted detail page. The fallback link for a saved listing that
+   *  isn't one of Stefanie's, so has no page on this site. */
+  externalUrl: string | null;
+  isSold: boolean;
+  /** Carried alongside `price` so the card renders a figure either way — it
+   *  reads whichever of the two matches the sold/available badge. */
+  soldPrice: string;
+};
+
+/** Every property saved under this lead — including ones saved from IDX's own
+ *  hosted MLS pages, which is most of them, since those cover the whole MLS
+ *  rather than just this account's listings. Returns the listings themselves
+ *  (not just ids) so the account page can render a saved listing that isn't in
+ *  our own featured/sold feed. */
+export async function getLeadFavoriteListings(leadId: string): Promise<FavoriteListing[]> {
+  const res = await idxFetch<RawLeadFavorite[]>(`leads/property/${leadId}`);
+  return (res || [])
+    // A row with no address is a saved record whose listing has since left the
+    // MLS — there's nothing to render for it.
+    .filter((row) => row.address)
+    .map((row) => {
+      const listing = { ...row, detailsUrlSlug: row.detailsUrlSlug ?? "" } as RawIdxListing;
+      const sold = mapSold(listing);
+      return {
+        ...mapAvailable(listing),
+        favoriteId: row.id,
+        externalUrl: row.fullDetailsURL ?? null,
+        isSold: (row.idxStatus || "").toLowerCase() === "sold",
+        soldPrice: sold.soldPrice,
+      };
+    });
 }
 
 /** IDX returns a raw 500 for an already-favorited listing — treat that as

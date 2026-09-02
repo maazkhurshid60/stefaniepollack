@@ -4,9 +4,9 @@ import { Search, Trash2, Lock, Heart } from "lucide-react";
 import PageHero from "@/components/feature/PageHero";
 import { useLead } from "@/hooks/useLead";
 import { useIdxListings } from "@/hooks/useIdxListings";
-import { useSavedFavorites } from "@/hooks/useSavedFavorites";
+import { getLeadFavoriteListings, type FavoriteListing } from "@/lib/idx";
 import { listSavedSearches, deleteSavedSearch, type SavedSearchRow } from "@/lib/savedSearches";
-import { PropertyCard, type ListedProperty } from "../listings/components/PropertyGrid";
+import { PropertyCard } from "../listings/components/PropertyGrid";
 
 function criteriaSummary(criteria: Record<string, unknown>): string {
   const parts = Object.entries(criteria)
@@ -19,17 +19,35 @@ export default function Account() {
   const { leadId, loading: authLoading, requireLead } = useLead();
   const [tab, setTab] = useState<"favorites" | "searches">("favorites");
 
-  /* ---------- Favorites ---------- */
-  const { data, loading: listingsLoading } = useIdxListings();
-  const fetchedSavedMls = useSavedFavorites();
-  const [savedMls, setSavedMls] = useState<Set<string>>(new Set());
-  useEffect(() => setSavedMls(fetchedSavedMls), [fetchedSavedMls]);
-  const favorites = useMemo((): { property: ListedProperty; isSold: boolean }[] => {
-    if (!data) return [];
-    const available = data.available.filter((p) => savedMls.has(p.listingID)).map((property) => ({ property, isSold: false }));
-    const sold = data.sold.filter((p) => savedMls.has(p.listingID)).map((property) => ({ property, isSold: true }));
-    return [...available, ...sold];
-  }, [data, savedMls]);
+  /* ---------- Favorites ----------
+     Read straight from the lead's saved properties rather than intersecting
+     saved ids with this site's own feed: a visitor saving from IDX's hosted
+     MLS pages can save any listing in the MLS, and those rows carry the whole
+     listing with them, so they render here too. `data` is still fetched, but
+     only to link a saved listing that *is* one of Stefanie's to its page on
+     this site instead of to IDX's. */
+  const { data } = useIdxListings();
+  const [favorites, setFavorites] = useState<FavoriteListing[]>([]);
+  const [listingsLoading, setListingsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!leadId) {
+      setFavorites([]);
+      return;
+    }
+    setListingsLoading(true);
+    getLeadFavoriteListings(leadId)
+      .then(setFavorites)
+      .catch(() => setFavorites([]))
+      .finally(() => setListingsLoading(false));
+  }, [leadId]);
+
+  /** listingID -> this site's own slug, for the saved listings that are ours. */
+  const ownSlugs = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const p of [...(data?.available ?? []), ...(data?.sold ?? [])]) map.set(p.listingID, p.slug);
+    return map;
+  }, [data]);
 
   /* ---------- Saved searches ---------- */
   const [searches, setSearches] = useState<SavedSearchRow[]>([]);
@@ -136,23 +154,23 @@ export default function Account() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-                    {favorites.map(({ property, isSold }) => (
-                      <PropertyCard
-                        key={property.id}
-                        property={property}
-                        isSold={isSold}
-                        showSave
-                        initialSaved
-                        onToggleSaved={(mlsId, isSaved) => {
-                          if (isSaved) return;
-                          setSavedMls((prev) => {
-                            const next = new Set(prev);
-                            next.delete(mlsId);
-                            return next;
-                          });
-                        }}
-                      />
-                    ))}
+                    {favorites.map((property) => {
+                      const ownSlug = ownSlugs.get(property.listingID);
+                      return (
+                        <PropertyCard
+                          key={property.favoriteId}
+                          property={property}
+                          isSold={property.isSold}
+                          showSave
+                          initialSaved
+                          href={ownSlug ? `/listings/${ownSlug}` : property.externalUrl ?? undefined}
+                          onToggleSaved={(mlsId, isSaved) => {
+                            if (isSaved) return;
+                            setFavorites((prev) => prev.filter((f) => f.listingID !== mlsId));
+                          }}
+                        />
+                      );
+                    })}
                   </div>
                 )
               ) : loadingSearches ? (

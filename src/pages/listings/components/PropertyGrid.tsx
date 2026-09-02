@@ -202,6 +202,7 @@ export function PropertyCard({
   showSave = false,
   initialSaved = false,
   onToggleSaved,
+  href,
 }: {
   property: ListedProperty;
   isSold: boolean;
@@ -209,6 +210,9 @@ export function PropertyCard({
   showSave?: boolean;
   initialSaved?: boolean;
   onToggleSaved?: (mlsId: string, saved: boolean) => void;
+  /** Overrides the default link to this site's own listing page — used for a
+   *  saved MLS listing that has no page here, which links to IDX's instead. */
+  href?: string;
 }) {
   const price = isSold ? (property as SoldProperty).soldPrice : (property as AvailableProperty).price;
   const { leadId, requireLead } = useLead();
@@ -235,7 +239,9 @@ export function PropertyCard({
 
   return (
     <motion.a
-      href={`/listings/${property.slug}`}
+      href={href ?? `/listings/${property.slug}`}
+      // Only a link off to IDX's own site opens in a new tab.
+      {...(href?.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {})}
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
