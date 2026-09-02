@@ -12,7 +12,7 @@ export default function AuthModal() {
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "busy" | "verify">("idle");
+  const [status, setStatus] = useState<"idle" | "busy" | "verify" | "welcome">("idle");
   const [error, setError] = useState("");
 
   const reset = () => {
@@ -47,7 +47,11 @@ export default function AuthModal() {
       // than leaving an unexplained email to turn up in their inbox.
       setStatus("verify");
     } else {
-      close();
+      // Matched to an existing lead. Worth saying out loud: this modal only
+      // appears when there's no local session, so a returning visitor is
+      // typically on a new device and wants to know their saved homes came
+      // back with them rather than that they just made a second account.
+      setStatus("welcome");
     }
   };
 
@@ -75,27 +79,42 @@ export default function AuthModal() {
             >
               <div className="flex items-center justify-between">
                 <h2 className="font-heading text-xl text-foreground-950">
-                  {status === "verify" ? "Check your email" : "Continue"}
+                  {status === "verify"
+                    ? "Check your email"
+                    : status === "welcome"
+                      ? `Welcome back${firstName.trim() ? `, ${firstName.trim()}` : ""}`
+                      : "Continue"}
                 </h2>
                 <button onClick={close} aria-label="Close" className="text-foreground-400 hover:text-foreground-950 transition-colors">
                   <X className="w-5 h-5" strokeWidth={1.5} />
                 </button>
               </div>
 
-              {status === "verify" ? (
+              {status === "verify" || status === "welcome" ? (
                 <>
                   <p className="mt-3 text-sm text-foreground-600 leading-relaxed">
-                    We&rsquo;ve sent a link to <b className="text-foreground-950 break-words">{email}</b> to verify
-                    your address and activate your account. You&rsquo;re signed in here already — verifying also
-                    lets you use this same account on the full MLS search, so everything you save stays in one
-                    place.
+                    {status === "verify" ? (
+                      <>
+                        We&rsquo;ve sent a link to <b className="text-foreground-950 break-words">{email}</b> to
+                        verify your address and activate your account. You&rsquo;re signed in here already —
+                        verifying also lets you use this same account on the full MLS search, so everything you
+                        save stays in one place.
+                      </>
+                    ) : (
+                      <>
+                        You already have an account with{" "}
+                        <b className="text-foreground-950 break-words">{email}</b>, so we&rsquo;ve signed you
+                        back into it — no second account made. Any homes and searches you&rsquo;ve saved before,
+                        here or on the full MLS search, are waiting in your account.
+                      </>
+                    )}
                   </p>
                   <button
                     type="button"
                     onClick={close}
                     className="mt-5 w-full px-6 py-3 bg-foreground-950 text-background-50 text-sm font-medium tracking-wide uppercase rounded-md hover:bg-foreground-800 transition-colors"
                   >
-                    Got it
+                    {status === "welcome" ? "Continue" : "Got it"}
                   </button>
                 </>
               ) : (
