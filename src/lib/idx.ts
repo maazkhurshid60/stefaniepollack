@@ -259,20 +259,26 @@ function idxUrl(path: string): string {
   return `/api/idx?path=${encodeURIComponent(path)}`;
 }
 
-async function idxFetch<T>(path: string, init?: FetchInit): Promise<T> {
+/** IDX returns a bare 204 (no body) for a valid, empty result set — e.g. an
+ *  account with 0 featured listings, or a lead-email search with no match.
+ *  A naive res.json() throws on that empty body, so read as text first and
+ *  treat "no body" as "no result" instead of an error. */
+async function idxFetch<T>(path: string, init?: FetchInit): Promise<T | null> {
   const res = await fetch(idxUrl(path), init);
+  if (res.status === 204) return null;
   if (!res.ok) throw new Error(`IDX request failed: ${path} (${res.status})`);
-  return res.json() as Promise<T>;
+  const text = await res.text();
+  return text ? (JSON.parse(text) as T) : null;
 }
 
 export async function fetchFeatured(): Promise<AvailableProperty[]> {
   const res = await idxFetch<RawIdxListResponse>("clients/featured");
-  return Object.values(res.data || {}).map(mapAvailable);
+  return Object.values(res?.data || {}).map(mapAvailable);
 }
 
 export async function fetchSoldPending(): Promise<SoldProperty[]> {
   const res = await idxFetch<RawIdxListResponse>("clients/soldpending");
-  return Object.values(res.data || {}).map(mapSold);
+  return Object.values(res?.data || {}).map(mapSold);
 }
 
 export type SystemLink = { name: string; url: string; category: string };
@@ -287,10 +293,12 @@ let systemLinksCache: Promise<SystemLink[]> | null = null;
  *  for this on the same page load. */
 export async function fetchSystemLinks(): Promise<SystemLink[]> {
   if (!systemLinksCache) {
-    systemLinksCache = idxFetch<SystemLink[]>("clients/systemlinks").catch((err: unknown) => {
-      systemLinksCache = null;
-      throw err;
-    });
+    systemLinksCache = idxFetch<SystemLink[]>("clients/systemlinks")
+      .then((res) => res ?? [])
+      .catch((err: unknown) => {
+        systemLinksCache = null;
+        throw err;
+      });
   }
   return systemLinksCache;
 }
@@ -313,7 +321,7 @@ export async function createLead(input: {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(input),
     });
-    return res.newID != null ? String(res.newID) : null;
+    return res?.newID != null ? String(res.newID) : null;
   } catch {
     return findLeadByEmail(input.email).catch(() => null);
   }
@@ -326,7 +334,7 @@ type RawLead = { id: string; email: string };
  *  database needed to power "log in with just your email." */
 export async function findLeadByEmail(email: string): Promise<string | null> {
   const res = await idxFetch<{ data?: RawLead[] }>(`leads/lead?email=${encodeURIComponent(email)}`);
-  const match = (res.data || []).find((l) => l.email.toLowerCase() === email.toLowerCase());
+  const match = (res?.data || []).find((l) => l.email.toLowerCase() === email.toLowerCase());
   return match ? match.id : null;
 }
 
@@ -359,7 +367,7 @@ export async function getLeadSearches(leadId: string): Promise<SavedSearch[]> {
     resultsURL: string;
   };
   const res = await idxFetch<{ searchInformation?: RawSearch[] }>(`leads/search/${leadId}`);
-  return (res.searchInformation || []).map((s) => ({
+  return (res?.searchInformation || []).map((s) => ({
     id: s.id,
     searchName: s.searchName,
     criteria: s.search,
@@ -395,7 +403,7 @@ export async function saveLeadFavorite(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ propertyName: listingId, property: { idxID: idxId, listingID: listingId } }),
     });
-    return res.newID != null ? String(res.newID) : null;
+    return res?.newID != null ? String(res.newID) : null;
   } catch {
     const existing = await getLeadFavorites(leadId).catch(() => new Map<string, string>());
     return existing.get(listingId) ?? null;
