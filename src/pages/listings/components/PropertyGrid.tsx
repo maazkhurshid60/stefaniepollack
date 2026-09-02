@@ -315,7 +315,7 @@ export default function PropertyGrid() {
     const { min, max } = PRICE_OPTIONS[priceIdx];
     const type = TYPE_OPTIONS[typeIdx];
     const filtered = base.filter((p) => {
-      if (q && !`${p.address} ${p.city}`.toLowerCase().includes(q)) return false;
+      if (q && !`${p.address} ${p.city} ${p.mlsNumber}`.toLowerCase().includes(q)) return false;
       const price = numericPrice(p, isSold);
       if (price < min || price > max) return false;
       if (p.beds < minBeds) return false;
@@ -342,7 +342,7 @@ export default function PropertyGrid() {
                 type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="City, neighborhood, or address…"
+                placeholder="City, neighborhood, address, or MLS #…"
                 aria-label="Search listings by city, neighborhood, or address"
                 className="w-full pl-11 pr-4 py-2.5 bg-background-100 border border-background-300 rounded-full text-sm text-foreground-900 placeholder:text-foreground-400 focus:outline-none focus:border-primary-500 transition-colors"
               />
