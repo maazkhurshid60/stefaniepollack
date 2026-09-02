@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BedDouble, Bath, Ruler, Search, LayoutGrid, Map as MapIcon, ChevronDown, Heart, User, LogOut, Bookmark, X } from "lucide-react";
 import { useIdxListings } from "@/hooks/useIdxListings";
-import type { AvailableProperty, SoldProperty } from "@/lib/idx";
+import { fetchSystemLinks, type AvailableProperty, type SoldProperty } from "@/lib/idx";
 import { PHOTO_FALLBACK } from "@/lib/media";
 import { useLead } from "@/hooks/useLead";
 import { addFavorite, removeFavorite } from "@/lib/favorites";
@@ -301,6 +301,18 @@ export default function PropertyGrid() {
   const [minBaths, setMinBaths] = useState(0);
   const [typeIdx, setTypeIdx] = useState(0);
   const [sort, setSort] = useState(SORT_OPTIONS[0].value);
+  const [fullSearchUrl, setFullSearchUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchSystemLinks()
+      .then((links) => {
+        const search = links.find((l) => l.name === "Map Search") || links.find((l) => l.category === "search");
+        if (search) setFullSearchUrl(search.url);
+      })
+      .catch(() => {
+        // full-MLS-search link is a nice-to-have — silently skip if it fails
+      });
+  }, []);
 
   const { data, loading } = useIdxListings();
   const fetchedSavedMls = useSavedFavorites();
@@ -478,6 +490,16 @@ export default function PropertyGrid() {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
+              {fullSearchUrl && (
+                <a
+                  href={fullSearchUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium text-foreground-700 border border-background-300 rounded-full hover:border-foreground-400 transition-colors whitespace-nowrap"
+                >
+                  Search the full MLS
+                </a>
+              )}
               <AccountMenu />
               <SaveSearchButton
                 searchName={`${isSold ? "Sold" : "Available"} homes${minBeds ? `, ${minBeds}+ beds` : ""}${
