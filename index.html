@@ -25,5 +25,11 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <!-- Sienna accessibility widget. It lives in the app shell rather than in a
+         React component on purpose: this is a single-page app, so index.html is
+         loaded once and the widget survives every client-side route change.
+         Mounted from a component it would be torn down and rebuilt on each
+         navigation, losing whatever settings the visitor had chosen. -->
+    <script src="https://cdn.jsdelivr.net/npm/sienna-accessibility/dist/sienna-accessibility.umd.js" async></script>
   </body>
 </html>

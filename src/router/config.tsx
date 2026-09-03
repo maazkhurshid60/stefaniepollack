@@ -8,6 +8,7 @@ import Neighborhoods from "../pages/neighborhoods/page";
 import Philanthropy from "../pages/philanthropy/page";
 import Resources from "../pages/resources/page";
 import Contact from "../pages/contact/page";
+import Schedule from "../pages/schedule/page";
 import Listings from "../pages/listings/page";
 import PropertyDetail from "../pages/listings/slug/page";
 import Blog from "../pages/blog/page";
@@ -46,6 +47,10 @@ const routes: RouteObject[] = [
   {
     path: "/contact",
     element: <Contact />,
+  },
+  {
+    path: "/schedule",
+    element: <Schedule />,
   },
   {
     path: "/listings",

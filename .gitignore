@@ -60,3 +60,8 @@ Desktop.ini
 .temp/
 tmp/
 *.pem
+
+# Full-resolution source photography. These are originals to crop web assets
+# from (see public/images/stefanie/), not files to serve — A7405411.jpg alone is
+# 15 MB, and anything under public/ is copied verbatim into the deploy.
+public/prof/

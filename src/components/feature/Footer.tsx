@@ -19,6 +19,7 @@ const footerLinks = {
     { label: "Sellers", href: "/sellers" },
     { label: "Resources", href: "/resources" },
     { label: "Contact", href: "/contact" },
+    { label: "Schedule a Meeting", href: "/schedule" },
   ],
   explore: [
     { label: "Neighborhoods", href: "/neighborhoods" },
