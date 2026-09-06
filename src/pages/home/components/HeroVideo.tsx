@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 
 /**
- * Hero background video. Desktop fades the video in once it can play;
- * mobile, reduced-motion, and data-saver connections never download it —
- * they just see the poster frame. Ported from the same pattern used on
- * my-app/app/components/home/HeroVideo.tsx.
+ * Hero background video. Desktop gets the full landscape cut; mobile gets a
+ * portrait crop of the same footage (404x720, ~1.9MB against the desktop
+ * file's 8MB) rather than the poster alone, since a phone cropping the
+ * landscape file to object-fit:cover was downloading thirds of every frame it
+ * would never display. Reduced-motion and data-saver still get poster only.
+ * Same pattern as my-app/app/components/home/HeroVideo.tsx.
  */
 export default function HeroVideo() {
   const ref = useRef<HTMLVideoElement>(null);
@@ -18,11 +20,11 @@ export default function HeroVideo() {
       .connection;
     const slow = conn?.saveData || /2g/.test(conn?.effectiveType ?? "");
 
-    if (!mq.matches || reducedMotion || slow) {
+    if (reducedMotion || slow) {
       setReady(true);
       return;
     }
-    setSrc("/video/hero.mp4");
+    setSrc(mq.matches ? "/video/hero.mp4" : "/video/hero-mobile.mp4");
   }, []);
 
   useEffect(() => {
