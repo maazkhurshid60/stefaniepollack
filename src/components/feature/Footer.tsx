@@ -75,7 +75,7 @@ export default function Footer() {
             <motion.div className="lg:col-span-4 lg:pr-8" variants={itemVariants}>
               <a href="/" className="inline-block">
                 <img
-                  src="https://images.squarespace-cdn.com/content/v1/62857f9467398e0fd622fe08/1765408611435-CQO5009VHL14BILFBT6P/Stefanie+Pollack_2025+Website+updates_Logo_Black.png?format=500w"
+                  src="/images/logo-compass-pollack.webp"
                   alt="Pollack Homes"
                   className="h-11 md:h-12 w-auto brightness-0 invert"
                 />

@@ -57,7 +57,7 @@ export default function Header() {
             {/* Logo */}
             <a href="/" className="flex-shrink-0">
               <img
-                src="https://storage.helloreaddy.io/project_files/ea13b1fb-fd83-432d-a9dd-911da517d8bf/e98c7909-df05-4785-9269-6c3c1bf310c3_compressed_Pollack-logo.webp"
+                src="/images/logo-pollack.webp"
                 alt="Pollack Homes"
                 className={`h-10 md:h-12 w-auto transition-all duration-500 ${
                   solid ? "brightness-0" : ""

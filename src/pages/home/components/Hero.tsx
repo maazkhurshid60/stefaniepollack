@@ -71,7 +71,7 @@ export default function Hero() {
           </div>
         </motion.div>
 
-        {/* Compass badge — bottom-left (bottom-right is the video's own burned-in watermark) */}
+        {/* Compass badge — bottom-left, mirrored by the licence line on the right */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -86,6 +86,21 @@ export default function Hero() {
             alt="Compass Real Estate"
             className="h-8 md:h-10 w-auto block"
           />
+        </motion.div>
+
+        {/* Licence line — bottom-right. It used to be set into the logo artwork
+            itself, where it rendered a few pixels tall and unreadable. Hidden
+            below md, where it would collide with the Compass badge; the footer
+            carries it on every page regardless. */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.4, duration: 0.8 }}
+          className="absolute bottom-8 right-8 md:bottom-10 md:right-12 hidden md:block px-4 py-2.5 rounded-full bg-black/25 backdrop-blur-sm border border-white/15"
+        >
+          <span className="text-white/70 text-[10px] tracking-[0.25em] uppercase font-medium whitespace-nowrap leading-none">
+            Stefanie Pollack &bull; DRE #01815614
+          </span>
         </motion.div>
       </div>
 
