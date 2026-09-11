@@ -271,14 +271,27 @@ async function idxFetch<T>(path: string, init?: FetchInit): Promise<T | null> {
   return text ? (JSON.parse(text) as T) : null;
 }
 
+/** IDX mixes LEASES in with sales, and the rent lands in the same price field,
+ *  so a $11,000/month rental reads as an $11,000 sale beside seven-figure
+ *  closings. Nothing here presents rentals as a category, so they are dropped
+ *  at the fetch - both feeds, since a lease can appear as an active listing
+ *  just as easily as a closed one. */
+function isLease(raw: RawIdxListing): boolean {
+  return (raw.propType || "").toLowerCase().includes("lease");
+}
+
 export async function fetchFeatured(): Promise<AvailableProperty[]> {
   const res = await idxFetch<RawIdxListResponse>("clients/featured");
-  return Object.values(res?.data || {}).map(mapAvailable);
+  return Object.values(res?.data || {})
+    .filter((raw) => !isLease(raw))
+    .map(mapAvailable);
 }
 
 export async function fetchSoldPending(): Promise<SoldProperty[]> {
   const res = await idxFetch<RawIdxListResponse>("clients/soldpending");
-  return Object.values(res?.data || {}).map(mapSold);
+  return Object.values(res?.data || {})
+    .filter((raw) => !isLease(raw))
+    .map(mapSold);
 }
 
 export type SystemLink = { name: string; url: string; category: string };
