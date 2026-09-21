@@ -1,10 +1,11 @@
 import { motion } from "framer-motion";
 import { Mail, Phone, MapPin, Instagram, Youtube, type LucideIcon } from "lucide-react";
+import { EMAIL, EMAIL_HREF, PHONE_DISPLAY, PHONE_HREF, LOCATION } from "@/lib/contact";
 
 const details: { icon: LucideIcon; label: string; value: string; href: string }[] = [
-  { icon: Phone, label: "Call or Text", value: "(818) 625-6171", href: "tel:+18186256171" },
-  { icon: Mail, label: "Email", value: "stefanie.pollack@compass.com", href: "mailto:stefanie.pollack@compass.com" },
-  { icon: MapPin, label: "Serving", value: "Studio City, CA 91604", href: "#" },
+  { icon: Phone, label: "Call or Text", value: PHONE_DISPLAY, href: PHONE_HREF },
+  { icon: Mail, label: "Email", value: EMAIL, href: EMAIL_HREF },
+  { icon: MapPin, label: "Serving", value: LOCATION, href: "#" },
 ];
 
 const socials: { icon: LucideIcon; label: string; url: string }[] = [

@@ -9,6 +9,7 @@ import {
   Youtube,
   type LucideIcon,
 } from "lucide-react";
+import { EMAIL, EMAIL_HREF, PHONE_DISPLAY, PHONE_HREF, LOCATION } from "@/lib/contact";
 
 const footerLinks = {
   navigation: [
@@ -29,9 +30,9 @@ const footerLinks = {
     { label: "Blog", href: "/blog" },
   ],
   contact: [
-    { Icon: Mail as LucideIcon, label: "stefanie@pollackhomes.com", href: "mailto:stefanie@pollackhomes.com" },
-    { Icon: Phone as LucideIcon, label: "(818) 625-6171", href: "tel:+18186256171" },
-    { Icon: MapPin as LucideIcon, label: "Studio City, CA 91604", href: "#" },
+    { Icon: Mail as LucideIcon, label: EMAIL, href: EMAIL_HREF },
+    { Icon: Phone as LucideIcon, label: PHONE_DISPLAY, href: PHONE_HREF },
+    { Icon: MapPin as LucideIcon, label: LOCATION, href: "#" },
   ],
   socials: [
     { Icon: Instagram as LucideIcon, label: "Instagram", url: "https://www.instagram.com/stefanieismyrealtor/" },
